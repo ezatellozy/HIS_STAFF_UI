@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-edina-blue: #0B4EB8;
+  --color-edina-blue-hover: #093E94;
+  --color-edina-blue-light: #2563EB;
+  --color-edina-cyan: #00B4D8;
+  --color-edina-cyan-light: #38BDF8;
+  --color-edina-turquoise: #00C9B7;
+  --color-edina-navy: #0B192E;
+  --color-edina-navy-light: #132742;
+
+  /* Harmonize teal scale to Edina Royal Cyan/Blue medical palette */
+  --color-teal-50: #f0f9ff;
+  --color-teal-100: #e0f2fe;
+  --color-teal-200: #bae6fd;
+  --color-teal-300: #38bdf8;
+  --color-teal-400: #00b4d8;
+  --color-teal-500: #0284c7;
+  --color-teal-600: #0b4eb8;
+  --color-teal-700: #093e94;
+  --color-teal-800: #082f6e;
+  --color-teal-900: #0a254e;
+  --color-teal-950: #05152e;
+}

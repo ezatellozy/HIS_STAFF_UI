@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Global Hospital Information System (HIS) Staff Portal v2",
+  "description": "Comprehensive Enterprise Hospital Information System (HIS) with Staff Portals for OPD Clinics, Emergency (ER), Inpatient Wards (IPD/ADT), Intensive Care (ICU), Operating Rooms (OR), Laboratory & Pathology (LIS), Radiology & Imaging (RIS), Pharmacy Operations, and Blood Bank & Transfusion Medicine Operations UX featuring pre-transfusion samples, forward/reverse ABO/Rh grouping, antibody screening, compatibility testing, unit allocation, ISBT-128 inventory, ready/issue handoff queues, returns disposition, MTP sessions, and hemovigilance transfusion reaction investigations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
