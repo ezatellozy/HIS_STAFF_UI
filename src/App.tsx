@@ -27,6 +27,15 @@ import { LaboratoryOpsShell } from './components/LaboratoryOps/LaboratoryOpsShel
 import { RadiologyOpsShell } from './components/RadiologyOps/RadiologyOpsShell';
 import { PharmacyOpsShell } from './components/PharmacyOps/PharmacyOpsShell';
 import { BloodBankOpsShell } from './components/BloodBankOps/BloodBankOpsShell';
+import { SupplyChainOpsShell } from './components/SupplyChainOps/SupplyChainOpsShell';
+import { ProcurementOpsShell } from './components/ProcurementOps/ProcurementOpsShell';
+import { FinanceApOpsShell } from './components/FinanceOps/FinanceApOpsShell';
+import { GeneralLedgerOpsShell } from './components/GeneralLedgerOps/GeneralLedgerOpsShell';
+import { TreasuryOpsShell } from './components/TreasuryOps/TreasuryOpsShell';
+import { RevenueCycleOpsShell } from './components/RevenueCycleOps/RevenueCycleOpsShell';
+import { CSSDOpsShell } from './components/CSSDOps/CSSDOpsShell';
+import { BiomedicalOpsShell } from './components/BiomedicalOps/BiomedicalOpsShell';
+import { HIMOpsShell } from './components/HIMOps/HIMOpsShell';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ShieldCheck, Activity, HeartHandshake } from 'lucide-react';
 import { EdinaLogo } from './components/common/EdinaLogo';
@@ -116,6 +125,33 @@ const MainLayout: React.FC = () => {
               }
             }}
           />
+        ) : activeWorkArea === 'procurement_ops' ? (
+          /* Healthcare Procurement, Sourcing, Bids & Purchasing Operations UX */
+          <ProcurementOpsShell />
+        ) : activeWorkArea === 'finance_ap_ops' ? (
+          /* Healthcare Finance, Accounts Payable & Treasury Gate Operations UX */
+          <FinanceApOpsShell />
+        ) : activeWorkArea === 'general_ledger_ops' ? (
+          /* Healthcare General Ledger, Chart of Accounts & Financial Reporting UX */
+          <GeneralLedgerOpsShell />
+        ) : activeWorkArea === 'treasury_ops' ? (
+          /* Healthcare Treasury & Cash/Bank Operations UX */
+          <TreasuryOpsShell />
+        ) : activeWorkArea === 'revenue_cycle_ops' ? (
+          /* Healthcare Patient AR & Revenue Cycle Operations UX */
+          <RevenueCycleOpsShell />
+        ) : activeWorkArea === 'cssd_ops' ? (
+          /* Sterile Processing Department & CSSD Lifecycle Operations UX */
+          <CSSDOpsShell />
+        ) : activeWorkArea === 'biomedical_ops' ? (
+          /* Clinical Engineering & Biomedical Medical Equipment Operations UX */
+          <BiomedicalOpsShell />
+        ) : activeWorkArea === 'him_ops' ? (
+          /* Health Information Management (HIM) & Medical Records UX */
+          <HIMOpsShell />
+        ) : activeWorkArea === 'supply_chain_ops' ? (
+          /* Enterprise Inventory, Materials Management & Supply Chain Operations UX */
+          <SupplyChainOpsShell />
         ) : activeWorkArea === 'patient_access_adt' ? (
           /* Patient Access, ADT & Patient Flow Operations UX */
           <PatientAccessAdtDashboard

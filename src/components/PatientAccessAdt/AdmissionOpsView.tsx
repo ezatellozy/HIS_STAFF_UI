@@ -215,7 +215,65 @@ export const AdmissionOpsView: React.FC<AdmissionOpsViewProps> = ({
 
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400">
-                      وُرد الطلب: {req.submittedAt}
+                      وُرد الطلب: <strong className="font-mono text-slate-700">{req.submittedAt}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Independent Operational Milestones & Metrics Strip */}
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-600 block">
+                    المعالم الزمنية المستقلة لمسار التنويم (Independent Operational Timestamps):
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-[11px]">
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">1. قرار التنويم (Decision):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.decisionToAdmitTimestamp || 'غير محدد'}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">2. رفع الطلب (Request):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.submittedAt}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">3. حجز السرير (Assignment):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.bedAssignedAt || (req.plannedBedNumber ? 'مخصص' : 'بانتظار السرير')}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">4. مغادرة الطوارئ (Departure):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.edDepartureAt || 'لم يغادر بعد'}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">5. تسكين القسم (Placement):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.inpatientPlacementAt || 'لم يتم التسكين'}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 block text-[10px]">6. التنويم الإداري (Effective):</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {req.administrativeAdmittedAt || 'بانتظار الدخول'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[10px] text-slate-500 flex-wrap gap-2">
+                    <span>
+                      • <strong>مؤشر انتظار التسكين (Request-to-Placement Wait):</strong> يُقاس من وقت رفع الطلب إلى تأكيد التسكين.
+                    </span>
+                    <span>
+                      • <strong>مؤشر المكوث بالطوارئ (ED Boarding Time):</strong> يُحسب كـ (وقت مغادرة الطوارئ - وقت قرار التنويم السريري) = {
+                        req.edDepartureAt && req.decisionToAdmitTimestamp
+                          ? 'محسوب'
+                          : 'غير متوفر لعدم اكتمال المحطتين'
+                      }.
                     </span>
                   </div>
                 </div>

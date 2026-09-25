@@ -102,9 +102,20 @@ export const SterileIvPreparationModal: React.FC<SterileIvPreparationModalProps>
                 <span className="font-bold text-slate-900 text-xs">{worksheet.finalConcentration} • {worksheet.finalVolume}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">صلاحية ما بعد التحضير (BUD):</span>
+                <span className="text-slate-500 block">صلاحية ما بعد التحضير (Mock Illustrative BUD):</span>
                 <span className="font-bold text-rose-700 text-xs">{worksheet.beyondUseDate}</span>
+                <span className="block text-[9px] text-slate-500">مثال استرشادي توضيحي محاكى</span>
               </div>
+            </div>
+
+            <div className="text-[10px] text-slate-700 bg-amber-50/90 p-2.5 rounded-lg border border-amber-200 space-y-1">
+              <strong className="text-amber-950 block">محددات صلاحية ما بعد التحضير (USP &lt;797&gt; Mock Reference Limitations):</strong>
+              <p className="leading-relaxed text-amber-900">
+                1. القيمة المعروضة أعلاه (24 ساعة) هي <strong>مثال توضيحي استرشادي محاكى فقط (Illustrative Example Only)</strong> وليست ناتج محرك احتساب معتمد.<br />
+                2. <strong>التبريد بمفرده (Refrigeration alone)</strong> لا يؤسس صلاحية نظامية سارية المفعول.<br />
+                3. يتطلب الاعتماد الفعلي للصلاحية التحقق المتخصص من <strong>الثبات الكيميائي والميكروبيولوجي الخاص بتركيبة المستحضر وظروف التعقيم (Formulation-specific chemical and microbiological stability verification)</strong>.<br />
+                4. لا يقدم النموذج الأولي هذا الحقل كحساب معياري شامل متوافق مع USP &lt;797&gt;.
+              </p>
             </div>
           </div>
 
@@ -150,31 +161,40 @@ export const SterileIvPreparationModal: React.FC<SterileIvPreparationModalProps>
             </div>
           </div>
 
-          {/* Double Check Verification Sign-off Section */}
+          {/* Double Check Verification Sign-off Section (ISMP Best Practice 19) */}
           <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
-            <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-teal-600" />
-              <span>التوثيق المزدوج المستقل (Independent Double Verification Sign-Off):</span>
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-teal-600" />
+                <span>التوثيق المزدوج المستقل وفق ممارسات الأمان (ISMP Best Practice 19):</span>
+              </h4>
+              <span className="text-[10px] text-slate-600 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
+                تفاعل تجريبي للنموذج الأولي — لا يمثل توثيقاً بيومترياً أو كلمة مرور (Prototype interaction only)
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              وفق توصيات معهد ممارسات الدواء الآمن (ISMP Best Practice 19)، يقتضي التوثيق المزدوج المستقل قيام ممارسين اثنين بفحص مستقل للمقادير والعمليات الحسابية ومطابقة الملصق والمكونات، دون أن يؤثر أحدهما مسبقاً على حكم الآخر. النقر هنا يمثل محاكاة لأدوار النظام ولا يدعي تنفيذ هوية رقمية أو توقيع إلكتروني حقيقي.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Technician Signoff */}
               <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800 text-[11px]">1. فني التحضير المعقم:</span>
+                  <span className="font-bold text-slate-800 text-[11px]">1. اكتمال التحضير والفحص التقني (Preparation Completed):</span>
                   {techSigned ? (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>مكتمل التحضير</span>
+                      <span>اكتمال التحضير المعقم</span>
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                      بانتظار التوثيق
+                      بانتظار توثيق الفني
                     </span>
                   )}
                 </div>
                 <div className="text-[11px] text-slate-600">
-                  الموثق: {worksheet.preparedByTechnician || 'ماجد الشريف (فني صيدلة معتمد)'}
+                  الموثق: {worksheet.preparedByTechnician || 'ماجد الشريف (فني تحضير معقم)'}
                 </div>
                 {!techSigned && (
                   <button
@@ -182,9 +202,9 @@ export const SterileIvPreparationModal: React.FC<SterileIvPreparationModalProps>
                       setTechSigned(true);
                       onSignoffTechnician(worksheet.id);
                     }}
-                    className="w-full py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] transition-colors"
+                    className="w-full py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] transition-colors cursor-pointer"
                   >
-                    تأكيد اكتمال التحضير المعقم (Sign Tech Prep)
+                    محاكاة توثيق التحضير الفني (Sign Preparation Completed)
                   </button>
                 )}
               </div>
@@ -192,20 +212,20 @@ export const SterileIvPreparationModal: React.FC<SterileIvPreparationModalProps>
               {/* Pharmacist Check Signoff */}
               <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800 text-[11px]">2. الصيدلي الفاحص المعتمد:</span>
+                  <span className="font-bold text-slate-800 text-[11px]">2. التدقيق الصيدلاني المستقل (Independent Pharmacist Check):</span>
                   {pharmacistSigned ? (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>معتمد ونهائي</span>
+                      <span>مكتمل ومعتمد نهائياً</span>
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">
-                      بانتظار التدقيق
+                      بانتظار تدقيق الصيدلي
                     </span>
                   )}
                 </div>
                 <div className="text-[11px] text-slate-600">
-                  الموثق: {worksheet.finalCheckedByPharmacist || 'د. ليلى عبد الحميد (صيدلي إكلينيكي)'}
+                  الموثق: {worksheet.finalCheckedByPharmacist || 'د. ليلى عبد الحميد (صيدلي إكلينيكي فاحص)'}
                 </div>
                 {!pharmacistSigned && (
                   <button
@@ -220,7 +240,7 @@ export const SterileIvPreparationModal: React.FC<SterileIvPreparationModalProps>
                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                   >
-                    اعتماد التدقيق المزدوج النهائي (Sign Pharmacist Check)
+                    محاكاة تدقيق الصيدلي المزدوج (Sign Independent Check)
                   </button>
                 )}
               </div>

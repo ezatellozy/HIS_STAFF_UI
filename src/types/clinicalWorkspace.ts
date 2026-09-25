@@ -1,6 +1,6 @@
 import { HospitalDepartment, StaffRole } from './his';
 
-export type ClinicalWorkArea = HospitalDepartment | 'my_work' | 'clinical_utilities' | 'patient_access_adt' | 'laboratory_ops' | 'radiology_ops' | 'pharmacy_ops' | 'blood_bank_ops';
+export type ClinicalWorkArea = HospitalDepartment | 'my_work' | 'clinical_utilities' | 'patient_access_adt' | 'laboratory_ops' | 'radiology_ops' | 'pharmacy_ops' | 'blood_bank_ops' | 'supply_chain_ops' | 'procurement_ops' | 'finance_ap_ops' | 'general_ledger_ops' | 'treasury_ops' | 'revenue_cycle_ops' | 'cssd_ops' | 'biomedical_ops' | 'him_ops';
 
 export interface WorkspaceOriginState {
   workArea: ClinicalWorkArea;

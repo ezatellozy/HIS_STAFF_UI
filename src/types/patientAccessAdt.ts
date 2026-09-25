@@ -226,6 +226,9 @@ export interface EncounterEntity {
   responsibleTeam: string;
   attendingPhysician: string;
   originatingAppointmentId?: string;
+  completedAt?: string;
+  physicalLocationReconciliationRequired?: boolean;
+  physicalLocationNote?: string;
 }
 
 export type AdmissionRequestStatus =
@@ -266,7 +269,13 @@ export interface AdmissionRequestEntity {
   plannedBedNumber?: string;
   clinicalSummaryRef: string;
   encounterId: string;
-  submittedAt: string;
+  // Independent Operational Milestones (Decoupled from each other)
+  decisionToAdmitTimestamp?: string; // Time clinician made clinical decision to admit
+  submittedAt: string; // Time admission request was submitted
+  bedAssignedAt?: string; // Time bed placement was confirmed
+  edDepartureAt?: string; // Time patient physically exited ED
+  inpatientPlacementAt?: string; // Time patient arrived and was placed in inpatient unit bed
+  administrativeAdmittedAt?: string; // Time administrative admission was finalized
   expectedArrival: string;
   coordinationTeam: string;
   specialInstructions?: string;

@@ -201,10 +201,23 @@ export const IncomingOrdersView: React.FC<IncomingOrdersViewProps> = ({
                   {/* Medication, Dose, Form */}
                   <td className="py-3 px-3.5">
                     <div className="font-bold text-slate-900 text-xs">{order.brandName}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{order.genericName}</div>
+                    <div className="text-[11px] font-mono mt-0.5">
+                      {order.isTallMan ? (
+                        <span className="font-bold text-teal-950 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                          {order.tallManName || order.genericName}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">{order.genericName}</span>
+                      )}
+                    </div>
                     <div className="text-[10px] font-bold text-teal-700 mt-0.5">
                       {order.orderedDose} • {order.strength}
                     </div>
+                    {(order.isSourceChanged || order.reverificationRequired) && (
+                      <span className="inline-block mt-1 px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-bold text-[9px] border border-rose-300 animate-pulse">
+                        تعديل بالمصدر ({order.sourceOrderVersion || 'v2.0'})
+                      </span>
+                    )}
                   </td>
 
                   {/* Route & Frequency */}

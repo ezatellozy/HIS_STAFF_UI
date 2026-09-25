@@ -15,27 +15,34 @@ import {
 import { BloodGroupTestResult, PreTransfusionSample } from '../../types/bloodBankOps';
 
 interface BloodGroupTypingWorkspaceProps {
-  tests: BloodGroupTestResult[];
+  tests?: BloodGroupTestResult[];
+  results?: BloodGroupTestResult[];
   samples: PreTransfusionSample[];
   selectedSampleId?: string;
-  onVerifyTest: (testId: string) => void;
+  onVerifyTest?: (testId: string) => void;
+  onConfirmVerification?: (resultId: string, verifierName: string) => void;
+  onNavigateToAntibodyScreen?: (sampleId: string) => void;
 }
 
 export const BloodGroupTypingWorkspace: React.FC<BloodGroupTypingWorkspaceProps> = ({
   tests,
+  results,
   samples,
   selectedSampleId,
-  onVerifyTest
+  onVerifyTest,
+  onConfirmVerification,
+  onNavigateToAntibodyScreen
 }) => {
+  const activeList = tests || results || [];
   const [activeTestId, setActiveTestId] = useState<string>(() => {
     if (selectedSampleId) {
-      const match = tests.find(t => t.sampleId === selectedSampleId);
+      const match = activeList.find(t => t.sampleId === selectedSampleId);
       if (match) return match.id;
     }
-    return tests[0]?.id || '';
+    return activeList[0]?.id || '';
   });
 
-  const currentTest = tests.find(t => t.id === activeTestId) || tests[0];
+  const currentTest = activeList.find(t => t.id === activeTestId) || activeList[0];
   const linkedSample = currentTest ? samples.find(s => s.id === currentTest.sampleId) : null;
 
   if (!currentTest) {
@@ -65,7 +72,7 @@ export const BloodGroupTypingWorkspace: React.FC<BloodGroupTypingWorkspaceProps>
 
         {/* Test Selector Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {tests.map(t => (
+          {activeList.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTestId(t.id)}
@@ -255,11 +262,27 @@ export const BloodGroupTypingWorkspace: React.FC<BloodGroupTypingWorkspaceProps>
 
               {currentTest.technicalVerificationStatus !== 'verified' && (
                 <button
-                  onClick={() => onVerifyTest(currentTest.id)}
+                  onClick={() => {
+                    if (onConfirmVerification) {
+                      onConfirmVerification(currentTest.id, 'أخصائي مختبر بدر العتيبي');
+                    } else if (onVerifyTest) {
+                      onVerifyTest(currentTest.id);
+                    }
+                  }}
                   className="w-full py-2 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>اعتماد الفصيلة فنياً (Technical Sign-off)</span>
+                </button>
+              )}
+
+              {onNavigateToAntibodyScreen && (
+                <button
+                  onClick={() => onNavigateToAntibodyScreen(currentTest.sampleId)}
+                  className="w-full py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span>متابعة لمختبر مسح الأجسام المضادة</span>
                 </button>
               )}
             </div>

@@ -27,7 +27,16 @@ import {
   X,
   FlaskConical,
   Pill,
-  Droplet
+  Droplet,
+  Boxes,
+  ShoppingCart,
+  DollarSign,
+  BookOpen,
+  Landmark,
+  Receipt,
+  Flame,
+  HeartPulse,
+  FileText
 } from 'lucide-react';
 import { useHis } from '../context/HisContext';
 import { StaffRole, HospitalDepartment } from '../types/his';
@@ -819,6 +828,238 @@ export const Header: React.FC = () => {
                 : 'bg-red-950 text-red-300 border border-red-800'
             }`}>
               BB
+            </span>
+          </button>
+
+          {/* Enterprise Supply Chain & Materials Management Portal */}
+          <button
+            onClick={() => {
+              setActiveWorkArea('supply_chain_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'supply_chain_ops' && !activeWorkspacePatientId
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-500/30'
+            }`}
+            title="إدارة سلاسل الإمداد والمستودعات الطبية والمخزون العام (Supply Chain & Materials Management)"
+          >
+            <Boxes className="w-3.5 h-3.5 text-amber-400" />
+            <span>الإمداد والمخزون (Supply Chain)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'supply_chain_ops' && !activeWorkspacePatientId
+                ? 'bg-amber-800 text-amber-100'
+                : 'bg-amber-950 text-amber-300 border border-amber-800'
+            }`}>
+              SCM
+            </span>
+          </button>
+
+          {/* Healthcare Procurement & Purchasing Operations Portal */}
+          <button
+            onClick={() => {
+              setActiveWorkArea('procurement_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'procurement_ops' && !activeWorkspacePatientId
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-indigo-300 hover:text-white hover:bg-slate-800 border border-indigo-500/30'
+            }`}
+            title="إدارة المشتريات والتعاقدات والمنافسات وأوامر الشراء (Procurement & Purchasing)"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 text-indigo-400" />
+            <span>المشتريات والتعاقدات (Procurement)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'procurement_ops' && !activeWorkspacePatientId
+                ? 'bg-indigo-800 text-indigo-100'
+                : 'bg-indigo-950 text-indigo-300 border border-indigo-800'
+            }`}>
+              PROC
+            </span>
+          </button>
+
+          {/* Finance & Accounts Payable Operations Portal */}
+          <button
+            id="nav-finance-ap-ops-button"
+            onClick={() => {
+              setActiveWorkArea('finance_ap_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'finance_ap_ops' && !activeWorkspacePatientId
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-emerald-300 hover:text-white hover:bg-slate-800 border border-emerald-500/30'
+            }`}
+            title="إدارة الحسابات الدائنة والمالية: فواتير الموردين، المطابقة الثلاثية، مقترحات السداد وأعمار الذمم (Finance & AP)"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+            <span>الحسابات الدائنة (Finance AP)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'finance_ap_ops' && !activeWorkspacePatientId
+                ? 'bg-emerald-800 text-emerald-100'
+                : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+            }`}>
+              AP
+            </span>
+          </button>
+
+          {/* General Ledger & Chart of Accounts Operations Portal */}
+          <button
+            id="nav-general-ledger-ops-button"
+            onClick={() => {
+              setActiveWorkArea('general_ledger_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'general_ledger_ops' && !activeWorkspacePatientId
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-500/30'
+            }`}
+            title="دفتر الأستاذ العام، الدليل المحاسبي، ميزان المراجعة وقواعد الأبعاد المالية (General Ledger & COA)"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span>الأستاذ العام (General Ledger)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'general_ledger_ops' && !activeWorkspacePatientId
+                ? 'bg-amber-800 text-amber-100'
+                : 'bg-amber-950 text-amber-300 border border-amber-800'
+            }`}>
+              GL
+            </span>
+          </button>
+
+          {/* Treasury & Cash/Bank Operations Portal */}
+          <button
+            id="nav-treasury-ops-button"
+            onClick={() => {
+              setActiveWorkArea('treasury_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'treasury_ops' && !activeWorkspacePatientId
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-blue-300 hover:text-white hover:bg-slate-800 border border-blue-500/30'
+            }`}
+            title="إدارة الخزينة والعمليات النقدية والبنكية: حسابات البنوك، تراخيص الصرف، أوامر سريع، المطابقة والسيولة (Treasury & Cash Operations)"
+          >
+            <Landmark className="w-3.5 h-3.5 text-blue-400" />
+            <span>الخزينة والعمليات البنكية (Treasury)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'treasury_ops' && !activeWorkspacePatientId
+                ? 'bg-blue-800 text-blue-100'
+                : 'bg-blue-950 text-blue-300 border border-blue-800'
+            }`}>
+              TR
+            </span>
+          </button>
+
+          {/* Patient Accounts Receivable & Revenue Cycle Operations Portal */}
+          <button
+            id="nav-revenue-cycle-ops-button"
+            onClick={() => {
+              setActiveWorkArea('revenue_cycle_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'revenue_cycle_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-teal-300 hover:text-white hover:bg-slate-800 border border-teal-500/30'
+            }`}
+            title="إدارة دورة الإيرادات والذمم المدينة للمرضى والتأمين ونفيس (Patient AR & Revenue Cycle)"
+          >
+            <Receipt className="w-3.5 h-3.5 text-teal-400" />
+            <span>دورة الإيرادات والذمم (Revenue Cycle)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'revenue_cycle_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-800 text-teal-100'
+                : 'bg-teal-950 text-teal-300 border border-teal-800'
+            }`}>
+              RC
+            </span>
+          </button>
+
+          {/* Sterile Processing & CSSD Operations Portal */}
+          <button
+            id="nav-cssd-ops-button"
+            onClick={() => {
+              setActiveWorkArea('cssd_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'cssd_ops' && !activeWorkspacePatientId
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'text-red-300 hover:text-white hover:bg-slate-800 border border-red-500/30'
+            }`}
+            title="إدارة التعقيم المركزي وتجهيز الأجهزة الطبية الجراحية (CSSD & Sterile Processing)"
+          >
+            <Flame className="w-3.5 h-3.5 text-red-400" />
+            <span>التعقيم المركزي (CSSD)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'cssd_ops' && !activeWorkspacePatientId
+                ? 'bg-red-800 text-red-100'
+                : 'bg-red-950 text-red-300 border border-red-800'
+            }`}>
+              CSSD
+            </span>
+          </button>
+
+          {/* Clinical Engineering & Biomedical Medical Equipment Operations Portal */}
+          <button
+            id="nav-biomedical-ops-button"
+            onClick={() => {
+              setActiveWorkArea('biomedical_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'biomedical_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-teal-300 hover:text-white hover:bg-slate-800 border border-teal-500/30'
+            }`}
+            title="إدارة الهندسة الطبية وصيانة الأجهزة والسلامة الكهربائية (Biomedical & Medical Equipment Ops)"
+          >
+            <HeartPulse className="w-3.5 h-3.5 text-teal-400" />
+            <span>الأجهزة الطبية (Biomedical)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'biomedical_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-800 text-teal-100'
+                : 'bg-teal-950 text-teal-300 border border-teal-800'
+            }`}>
+              BIO
+            </span>
+          </button>
+
+          {/* Health Information Management (HIM) & Medical Records Operations Portal */}
+          <button
+            id="nav-him-ops-button"
+            onClick={() => {
+              setActiveWorkArea('him_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'him_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-teal-300 hover:text-white hover:bg-slate-800 border border-teal-500/30'
+            }`}
+            title="إدارة السجلات الطبية والمعلومات الصحية والترميز (HIM Medical Records & Coding)"
+          >
+            <FileText className="w-3.5 h-3.5 text-teal-400" />
+            <span>السجلات الطبية (HIM)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'him_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-800 text-teal-100'
+                : 'bg-teal-950 text-teal-300 border border-teal-800'
+            }`}>
+              HIM
             </span>
           </button>
 

@@ -127,7 +127,7 @@ export const DischargeOpsView: React.FC<DischargeOpsViewProps> = ({
             <strong>أمر الخروج وجاهزيته (Readiness Checklist):</strong> استيفاء تسوية الأدوية والملخص الطبي وتخليص الحسابات.<br />
             <strong>حدث الخروج بالنظام (Discharge Encounter):</strong> إنهاء المسار السريري التنويمي للمريض.<br />
             <strong>المغادرة الفيزيائية (Physical Departure):</strong> خروج المريض الفعلي وبدء دورة تعقيم السرير.<br />
-            <strong>إغلاق الزيارة إدارياً (Administrative Closure):</strong> التسوية النهائية للسجلات الطبية والفاتورة.
+            <strong>إغلاق الزيارة إدارياً (Administrative Closure):</strong> قفل العمليات التشغيلية الروتينية للزيارة، مع بقاء التعديلات السريرية والملحقات (Addenda/Amendments) خاضعة لسياسات التوثيق السريري المعتمدة دون إعادة فتح الزيارة تلقائياً.
           </p>
         </div>
 
@@ -235,7 +235,7 @@ export const DischargeOpsView: React.FC<DischargeOpsViewProps> = ({
                         {isClosed ? (
                           <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 flex items-center gap-1">
                             <Lock className="w-3.5 h-3.5 text-slate-600" />
-                            الزيارة مغلقة بالكامل طبياً وإدارياً (Encounter Closed)
+                            الزيارة مغلقة إدارياً (Encounter Closed — العمليات مقفلة؛ والتعديلات السريرية تخضع لسياسة الملحقات)
                           </span>
                         ) : isDeparted ? (
                           <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold border border-blue-300 flex items-center gap-1">

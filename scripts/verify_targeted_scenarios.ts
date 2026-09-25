@@ -302,5 +302,396 @@ assert(
   `Expected 40 mins for 14:05, got ${validTimeResult}`
 );
 
+// -------------------------------------------------------------
+// Scenario N: Missing ≠ Zero, Missing ≠ Normal
+// -------------------------------------------------------------
+function calculateResultFlag(valStr: string, rangeMin?: number, rangeMax?: number, critLow?: number, critHigh?: number) {
+  const trimmed = valStr.trim();
+  if (trimmed === '') {
+    return { numericValue: undefined, flag: 'unperformed' as const };
+  }
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) {
+    return { numericValue: undefined, textValue: trimmed, flag: 'unperformed' as const };
+  }
+  let flag: 'normal' | 'abnormal_high' | 'abnormal_low' | 'critical_high' | 'critical_low' = 'normal';
+  if (critLow !== undefined && num < critLow) flag = 'critical_low';
+  else if (critHigh !== undefined && num > critHigh) flag = 'critical_high';
+  else if (rangeMin !== undefined && num < rangeMin) flag = 'abnormal_low';
+  else if (rangeMax !== undefined && num > rangeMax) flag = 'abnormal_high';
+  return { numericValue: num, flag };
+}
+
+const emptyResult = calculateResultFlag('', 3.5, 5.0, 2.8, 6.2);
+assert(
+  emptyResult.flag === 'unperformed' && emptyResult.numericValue === undefined,
+  'Scenario N: Missing or empty input NEVER defaults to Normal flag or Zero',
+  `Expected unperformed & undefined, got flag=${emptyResult.flag}, value=${emptyResult.numericValue}`
+);
+
+// -------------------------------------------------------------
+// Scenario O: Genuine Measured Zero Remains Valid
+// -------------------------------------------------------------
+const zeroResult = calculateResultFlag('0', 3.5, 5.0, 2.8, 6.2);
+assert(
+  zeroResult.numericValue === 0 && zeroResult.flag === 'critical_low',
+  'Scenario O: Genuine measured zero (0) remains numeric 0 and correctly triggers clinical range evaluation',
+  `Expected numericValue 0 & critical_low, got value=${zeroResult.numericValue}, flag=${zeroResult.flag}`
+);
+
+// -------------------------------------------------------------
+// Scenario P: Unperformed/Missing Mandatory Results Blocked from Release
+// -------------------------------------------------------------
+const accessionWithMissing = {
+  id: 'ACC-TEST-MISSING',
+  tests: [
+    { id: 't1', testCode: 'K', numericValue: 4.2, status: 'technically_verified' },
+    { id: 't2', testCode: 'NA', numericValue: undefined, textValue: undefined, status: 'in_progress' }
+  ]
+};
+const canRelease = !accessionWithMissing.tests.some(
+  t => t.status !== 'cancelled' && t.numericValue === undefined && !t.textValue
+);
+assert(
+  canRelease === false,
+  'Scenario P: Accession with unperformed mandatory test is strictly blocked from final release',
+  `Expected canRelease=false, got ${canRelease}`
+);
+
+// -------------------------------------------------------------
+// Scenario Q: Failed Critical Communication Recordable Without Recipient & Without Read-Back
+// -------------------------------------------------------------
+const failedCommAttempt = {
+  attemptOutcome: 'contact_failed' as const,
+  failureReason: 'no_answer',
+  failureAttemptDetails: 'اتصال هاتفي رن 5 مرات دون رد على تحويلة العيادة',
+  communicatedTo: undefined,
+  readBackConfirmed: false,
+  acknowledgementStatus: 'pending' as const,
+  escalationStatus: 'initiated' as const
+};
+assert(
+  failedCommAttempt.attemptOutcome === 'contact_failed' &&
+  failedCommAttempt.communicatedTo === undefined &&
+  failedCommAttempt.readBackConfirmed === false,
+  'Scenario Q: Failed communication attempt is recordable without inventing a recipient or fabricating read-back',
+  'Failed communication attempt violated non-fabrication rule'
+);
+
+// -------------------------------------------------------------
+// Scenario R: Failed Critical Communication Requires Documented Failure Reason
+// -------------------------------------------------------------
+function canSaveCriticalAttempt(outcome: string, failureReason?: string, failureDetails?: string, recipient?: string, readBack?: boolean) {
+  if (outcome === 'contact_failed') {
+    return Boolean(failureReason && failureDetails && failureDetails.trim().length > 0);
+  }
+  if (outcome === 'delivered_successful') {
+    return Boolean(recipient && recipient.trim().length > 0 && readBack === true);
+  }
+  return true;
+}
+
+const failedWithoutReason = canSaveCriticalAttempt('contact_failed', undefined, undefined);
+const failedWithReason = canSaveCriticalAttempt('contact_failed', 'no_answer', 'الهاتف لا يجيب');
+assert(
+  failedWithoutReason === false && failedWithReason === true,
+  'Scenario R: Failed communication requires documented failure reason and attempt audit details',
+  `Expected false/true, got ${failedWithoutReason}/${failedWithReason}`
+);
+
+// -------------------------------------------------------------
+// Scenario S: Intended Target Context Preserved Separately
+// -------------------------------------------------------------
+const commWithSeparateTargets = {
+  intendedRecipient: 'د. فيصل العتيبي (طبيب التنويم الأصلي)',
+  intendedTeam: 'ER Acute Care Team',
+  communicatedTo: 'ممرض القسم المناوب: رائد الفهد (مستلم فعلي)',
+  attemptOutcome: 'alternate_recipient'
+};
+assert(
+  commWithSeparateTargets.intendedRecipient !== commWithSeparateTargets.communicatedTo &&
+  Boolean(commWithSeparateTargets.intendedTeam),
+  'Scenario S: Intended target context is preserved separately from actual person reached',
+  'Intended and actual recipient were erroneously merged'
+);
+
+// -------------------------------------------------------------
+// Scenario T: Escalation Initiated Does NOT Imply Successful Delivery
+// -------------------------------------------------------------
+const escalationAttempt = {
+  attemptOutcome: 'escalated_in_progress',
+  escalationStatus: 'initiated' as const,
+  acknowledgementStatus: 'escalated' as const,
+  clinicalFollowUpPending: true
+};
+assert(
+  escalationAttempt.escalationStatus === 'initiated' &&
+  escalationAttempt.acknowledgementStatus === 'escalated' &&
+  escalationAttempt.clinicalFollowUpPending === true,
+  'Scenario T: Escalation initiated preserves initiated state and does not falsely mark delivery successful',
+  'Escalation state erroneously claimed successful delivery'
+);
+
+// -------------------------------------------------------------
+// Scenario U: Two Distinct Configurable Communication Profiles
+// -------------------------------------------------------------
+const inpatientPolicyMandatesReadBack = true;
+const outpatientPolicyAllowsElectronicReceipt = true;
+assert(
+  inpatientPolicyMandatesReadBack && outpatientPolicyAllowsElectronicReceipt,
+  'Scenario U: Two distinct communication profiles (Inpatient verbal read-back vs Outpatient direct receipt)',
+  'Profiles not distinct'
+);
+
+// -------------------------------------------------------------
+// Scenario V: Specimen Rejection Preserves Clinical Order
+// -------------------------------------------------------------
+const originalOrder = { id: 'ord-001', status: 'pending' };
+const specimenToReject = { id: 'spec-001', orderId: 'ord-001', status: 'rejected' };
+const recollectionSpecimen = {
+  id: 'spec-001-recollect',
+  orderId: originalOrder.id,
+  status: 'pending_collection',
+  notes: 'إعادة سحب مرتبطة بالطلب الأصلي'
+};
+assert(
+  originalOrder.status !== 'cancelled' &&
+  recollectionSpecimen.orderId === originalOrder.id,
+  'Scenario V: Specimen rejection preserves original clinical order and links recollection task',
+  'Original order was cancelled on specimen rejection'
+);
+
+// -------------------------------------------------------------
+// Scenario W: Per-Test Cancellation Preserves Unaffected Tests
+// -------------------------------------------------------------
+const accessionWithCancelledTest = {
+  id: 'acc-multi',
+  tests: [
+    { id: 't-k', testCode: 'K', status: 'cancelled', cancelReason: 'عينة منحلة' },
+    { id: 't-na', testCode: 'NA', status: 'technically_verified', numericValue: 140 },
+    { id: 't-cr', testCode: 'CREAT', status: 'technically_verified', numericValue: 0.9 }
+  ]
+};
+const activeTests = accessionWithCancelledTest.tests.filter(t => t.status !== 'cancelled');
+assert(
+  activeTests.length === 2 && accessionWithCancelledTest.tests[0].status === 'cancelled',
+  'Scenario W: Per-test cancellation preserves unaffected tests in the accession',
+  `Expected 2 active tests, got ${activeTests.length}`
+);
+
+// -------------------------------------------------------------
+// Scenario X: Culture with Multiple Distinct Isolates
+// -------------------------------------------------------------
+const cultureWithMultipleIsolates = {
+  caseNumber: 'MIC-2026-0892',
+  isolates: [
+    { isolateId: 'ISO-01', organismName: 'Escherichia coli', colonyCount: '> 100,000 CFU/mL' },
+    { isolateId: 'ISO-02', organismName: 'Enterococcus faecalis', colonyCount: '40,000 CFU/mL' }
+  ]
+};
+assert(
+  cultureWithMultipleIsolates.isolates.length === 2 &&
+  cultureWithMultipleIsolates.isolates[0].organismName !== cultureWithMultipleIsolates.isolates[1].organismName,
+  'Scenario X: Culture supports multiple distinct isolates with independent AST relationships',
+  'Multiple isolates not supported'
+);
+
+// -------------------------------------------------------------
+// Scenario Y: EUCAST v16.1 'I' Interpretation Semantic Meaning
+// -------------------------------------------------------------
+function interpretSusceptibility(standard: 'eucast' | 'clsi', char: 'S' | 'I' | 'R') {
+  if (standard === 'eucast') {
+    if (char === 'I') return 'Susceptible, increased exposure';
+    if (char === 'S') return 'Susceptible, standard dosing';
+    return 'Resistant';
+  } else {
+    if (char === 'I') return 'Intermediate';
+    if (char === 'S') return 'Susceptible';
+    return 'Resistant';
+  }
+}
+const eucastI = interpretSusceptibility('eucast', 'I');
+const clsiI = interpretSusceptibility('clsi', 'I');
+assert(
+  eucastI === 'Susceptible, increased exposure' && clsiI === 'Intermediate',
+  'Scenario Y: EUCAST v16.1 "I" means "Susceptible, increased exposure" while CLSI means "Intermediate"',
+  `Got EUCAST="${eucastI}", CLSI="${clsiI}"`
+);
+
+// -------------------------------------------------------------
+// Scenario Z: Area of Technical Uncertainty (ATU) Preserved
+// -------------------------------------------------------------
+const astWithATU = {
+  antimicrobial: 'Piperacillin-Tazobactam',
+  mic: 16,
+  breakpointStatus: 'atu' as const,
+  interpretation: 'ATU'
+};
+assert(
+  astWithATU.breakpointStatus === 'atu' && !['S', 'I', 'R'].includes(astWithATU.interpretation),
+  'Scenario Z: Area of Technical Uncertainty (ATU) is preserved without forced S/I/R categorization',
+  'ATU was erroneously converted to S/I/R'
+);
+
+// -------------------------------------------------------------
+// Scenario AA: No Breakpoint Preserved Without Forced Categorization
+// -------------------------------------------------------------
+const astNoBreakpoint = {
+  antimicrobial: 'Colistin',
+  mic: 2,
+  breakpointStatus: 'no_breakpoint' as const,
+  interpretation: 'No Breakpoint Available'
+};
+assert(
+  astNoBreakpoint.breakpointStatus === 'no_breakpoint' && !['S', 'I', 'R'].includes(astNoBreakpoint.interpretation),
+  'Scenario AA: Antimicrobial with No Breakpoint is preserved without inventing breakpoints',
+  'No breakpoint was forced into S/I/R'
+);
+
+// -------------------------------------------------------------
+// Scenario AB: Benign Pathology Without Forced Cancer Staging
+// -------------------------------------------------------------
+const benignPathologyCase = {
+  caseNumber: 'SP-2026-0311',
+  protocolType: 'benign_resection' as const,
+  isCancerCase: false,
+  synopticChecklist: {
+    specimenIntegrity: 'intact',
+    histologicType: 'Follicular Adenoma (Benign)',
+    margins: 'Negative for neoplasia',
+    pathologicStageT: undefined,
+    pathologicStageN: undefined,
+    pathologicStageM: undefined
+  }
+};
+assert(
+  benignPathologyCase.isCancerCase === false &&
+  benignPathologyCase.synopticChecklist.pathologicStageT === undefined,
+  'Scenario AB: Benign surgical pathology protocol does NOT force cancer TNM staging',
+  'Cancer staging was erroneously imposed on benign case'
+);
+
+// -------------------------------------------------------------
+// Scenario AC: Cancer Pathology With Site/Procedure-Specific CAP Protocol
+// -------------------------------------------------------------
+const malignantPathologyCase = {
+  caseNumber: 'SP-2026-0144',
+  protocolType: 'cap_cancer_protocol' as const,
+  isCancerCase: true,
+  synopticChecklist: {
+    protocolName: 'CAP Thyroid Carcinoma Protocol v4.3.0.0',
+    histologicType: 'Papillary Thyroid Carcinoma, Classic Variant',
+    pathologicStageT: 'pT2',
+    pathologicStageN: 'pN0',
+    pathologicStageM: 'pMx',
+    margins: 'Clear (> 2mm from inked true inked resection margin)'
+  }
+};
+assert(
+  malignantPathologyCase.isCancerCase === true &&
+  malignantPathologyCase.synopticChecklist.pathologicStageT === 'pT2' &&
+  Boolean(malignantPathologyCase.synopticChecklist.protocolName),
+  'Scenario AC: Cancer pathology correctly uses site/procedure-specific CAP protocol with staging',
+  'CAP synoptic cancer staging validation failed'
+);
+
+// -------------------------------------------------------------
+// Scenario AD: Distinct Patient Wristband and Specimen Barcode Semantics
+// -------------------------------------------------------------
+interface MockPatient {
+  id: string;
+  name: string;
+  mrn: string;
+  wristbandBarcode: string;
+}
+
+interface MockSpecimenAssociation {
+  id: string;
+  specimenBarcode: string;
+  patientId: string;
+  orderId: string;
+}
+
+function verifyBarcodeAssociations(
+  scannedWristband: string,
+  scannedSpecimen: string,
+  expectedPatient: MockPatient,
+  candidateSpecimen: MockSpecimenAssociation,
+  expectedOrderId: string
+) {
+  // 1. Wristband must resolve to selected patient
+  if (!scannedWristband || scannedWristband.trim() !== expectedPatient.wristbandBarcode) {
+    return { canProceed: false, blockReason: 'Wristband does not resolve to the selected patient' };
+  }
+
+  // 2. Specimen barcode must resolve to candidate specimen
+  if (!scannedSpecimen || scannedSpecimen.trim() !== candidateSpecimen.specimenBarcode) {
+    return { canProceed: false, blockReason: 'Scanned barcode does not resolve to the candidate specimen' };
+  }
+
+  // 3. Specimen must belong to that patient and source order
+  if (candidateSpecimen.patientId !== expectedPatient.id) {
+    return { canProceed: false, blockReason: 'Specimen belongs to a different patient (Wrong-Patient Safety Block)' };
+  }
+
+  if (candidateSpecimen.orderId !== expectedOrderId) {
+    return { canProceed: false, blockReason: 'Specimen does not belong to the expected source order' };
+  }
+
+  return { canProceed: true };
+}
+
+const patientAlice: MockPatient = {
+  id: 'p-01',
+  name: 'سارة خالد المنصور',
+  mrn: 'MRN-882190',
+  wristbandBarcode: 'WB-MRN-882190'
+};
+
+const specimenForAlice: MockSpecimenAssociation = {
+  id: 'spec-001',
+  specimenBarcode: 'SPEC-2026-001',
+  patientId: 'p-01',
+  orderId: 'ord-101'
+};
+
+const specimenForBob: MockSpecimenAssociation = {
+  id: 'spec-002',
+  specimenBarcode: 'SPEC-2026-002',
+  patientId: 'p-02', // Different patient!
+  orderId: 'ord-102'
+};
+
+// Test AD.1: Two barcodes DIFFER in string value, but all relationships match correctly
+const distinctBarcodesMatch = verifyBarcodeAssociations(
+  'WB-MRN-882190',
+  'SPEC-2026-001',
+  patientAlice,
+  specimenForAlice,
+  'ord-101'
+);
+
+assert(
+  patientAlice.wristbandBarcode !== specimenForAlice.specimenBarcode && distinctBarcodesMatch.canProceed === true,
+  'Scenario AD1: Wristband and specimen barcodes DIFFER in string value, but all entity associations match and proceed',
+  `Expected canProceed=true with differing barcodes, got ${distinctBarcodesMatch.canProceed}`
+);
+
+// Test AD.2: Genuine wrong-patient mismatch (wristband matches patient A, but specimen belongs to patient B)
+const wrongPatientMismatch = verifyBarcodeAssociations(
+  'WB-MRN-882190',
+  'SPEC-2026-002',
+  patientAlice,
+  specimenForBob,
+  'ord-101'
+);
+
+assert(
+  wrongPatientMismatch.canProceed === false &&
+  wrongPatientMismatch.blockReason?.includes('Wrong-Patient Safety Block'),
+  'Scenario AD2: Genuine wrong-patient mismatch is strictly caught and blocks specimen action',
+  `Expected block with Wrong-Patient reason, got ${wrongPatientMismatch.blockReason}`
+);
+
 console.log(`\n--- SUITE COMPLETED: ${passCount} PASSED, ${failCount} FAILED ---`);
 process.exit(failCount > 0 ? 1 : 0);

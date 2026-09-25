@@ -329,9 +329,11 @@ export const MicrobiologyWorkspace: React.FC<MicrobiologyWorkspaceProps> = ({
                     <FlaskConical className="w-4 h-4 text-teal-600" />
                     <span>الكائن الحي المعزول واختبار الحساسية (Organism ID & AST Panel):</span>
                   </h4>
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    المعيار النشط: {selectedStandard.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono">
+                      الملف النشط: {selectedStandard === 'eucast' ? 'EUCAST v16.1 (2026)' : 'CLSI M100 Ed36'}
+                    </span>
+                  </div>
                 </div>
 
                 {activeCase.organisms.length === 0 ? (
@@ -354,53 +356,112 @@ export const MicrobiologyWorkspace: React.FC<MicrobiologyWorkspaceProps> = ({
                       </div>
 
                       {/* AST Table */}
-                      <table className="w-full text-xs text-right">
-                        <thead className="bg-slate-200/70 text-slate-700 font-bold border-b border-slate-300">
-                          <tr>
-                            <th className="p-2">المضاد الحيوي (Antimicrobial)</th>
-                            <th className="p-2">طريقة الفحص</th>
-                            <th className="p-2">التركيز المثبط (MIC Value)</th>
-                            <th className="p-2">التفسير ({selectedStandard.toUpperCase()})</th>
-                            <th className="p-2">نطاق الحساسية (Breakpoint)</th>
-                            <th className="p-2">ملاحظات توجيهية</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200 font-medium">
-                          {org.astRows.map(ast => {
-                            // Dynamically adjust display meaning based on selected standard
-                            const isEucast = selectedStandard === 'eucast';
-                            let meaning = ast.interpretationMeaning;
-                            if (ast.interpretation === 'I') {
-                              meaning = isEucast
-                                ? 'حساس، مع زيادة التعرض الدوائي (Susceptible, increased exposure)'
-                                : 'متوسط المقاومة (Intermediate)';
-                            }
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-right">
+                          <thead className="bg-slate-200/70 text-slate-700 font-bold border-b border-slate-300">
+                            <tr>
+                              <th className="p-2">المضاد الحيوي (Antimicrobial)</th>
+                              <th className="p-2">طريقة الفحص</th>
+                              <th className="p-2">التركيز المثبط (MIC Value)</th>
+                              <th className="p-2">التصنيف ({selectedStandard.toUpperCase()})</th>
+                              <th className="p-2">نطاق الحساسية (Breakpoint)</th>
+                              <th className="p-2">التفسير والتوجيه السريري (Stewardship & Governance)</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 font-medium">
+                            {org.astRows.map(ast => {
+                              const isEucast = selectedStandard === 'eucast';
+                              const isATU = ast.technicalUncertainty || ast.interpretation === 'ATU';
+                              const isNoBreakpoint = ast.noBreakpoint || ast.interpretation === 'NO_BREAKPOINT';
+                              const isSuppressed = ast.selectiveReportingSuppressed;
+                              const isIntrinsic = ast.intrinsicResistance;
 
-                            return (
-                              <tr key={ast.id} className="hover:bg-slate-100/70">
-                                <td className="p-2 font-bold text-slate-900">{ast.antimicrobial}</td>
-                                <td className="p-2 font-mono text-[10px] text-slate-500">{ast.method}</td>
-                                <td className="p-2 font-mono font-bold text-slate-800">{ast.measuredValue}</td>
-                                <td className="p-2">
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-[11px] font-black font-mono inline-block ${
-                                      ast.interpretation === 'S'
-                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                        : ast.interpretation === 'I'
-                                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                        : 'bg-red-100 text-red-800 border border-red-300'
-                                    }`}
-                                  >
-                                    {ast.interpretation}
-                                  </span>
-                                </td>
-                                <td className="p-2 font-mono text-[10px] text-slate-600">{ast.breakpointRange}</td>
-                                <td className="p-2 text-[11px] text-slate-600">{meaning}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                              let meaning = ast.interpretationMeaning;
+                              if (ast.interpretation === 'I') {
+                                meaning = isEucast
+                                  ? 'حساس عند زيادة التعرض الدوائي (Susceptible, increased exposure: يتطلب جرعة أعلى أو تركيزاً نسيجياً مكثفاً)'
+                                  : 'متوسط المقاومة (Intermediate: منطقة عازلة فسيولوجية)';
+                              }
+
+                              return (
+                                <tr
+                                  key={ast.id}
+                                  className={`hover:bg-slate-100/70 ${
+                                    isSuppressed
+                                      ? 'bg-slate-100/40 text-slate-600'
+                                      : isATU
+                                      ? 'bg-amber-50/50'
+                                      : isNoBreakpoint
+                                      ? 'bg-slate-50'
+                                      : ''
+                                  }`}
+                                >
+                                  <td className="p-2">
+                                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                      <span>{ast.antimicrobial}</span>
+                                      {isIntrinsic && (
+                                        <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded font-sans">
+                                          مقاومة فطرية (Intrinsic)
+                                        </span>
+                                      )}
+                                      {isSuppressed && (
+                                        <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-sans">
+                                          محجوب سريرياً (AMS Restricted)
+                                        </span>
+                                      )}
+                                    </div>
+                                    {ast.comments && (
+                                      <div className="text-[10px] text-slate-500 font-sans mt-0.5">
+                                        {ast.comments}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="p-2 font-mono text-[10px] text-slate-500">{ast.method}</td>
+                                  <td className="p-2 font-mono font-bold text-slate-800">{ast.measuredValue}</td>
+                                  <td className="p-2">
+                                    {isNoBreakpoint ? (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300 inline-block">
+                                        بدون حد سريري (No Breakpoint)
+                                      </span>
+                                    ) : isATU ? (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-400 inline-flex items-center gap-1">
+                                        <span>ATU</span>
+                                        <span className="text-[9px] font-normal">(عدم يقين فني)</span>
+                                      </span>
+                                    ) : isSuppressed ? (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-300 inline-block">
+                                        {ast.interpretation} (محجوب AMS)
+                                      </span>
+                                    ) : ast.interpretation === 'S' ? (
+                                      <span className="px-2.5 py-0.5 rounded text-[11px] font-black font-mono inline-block bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        S
+                                      </span>
+                                    ) : ast.interpretation === 'I' ? (
+                                      <span className="px-2.5 py-0.5 rounded text-[11px] font-black font-mono inline-block bg-amber-100 text-amber-900 border border-amber-300">
+                                        I
+                                      </span>
+                                    ) : ast.interpretation === 'R' ? (
+                                      <span className="px-2.5 py-0.5 rounded text-[11px] font-black font-mono inline-block bg-red-100 text-red-800 border border-red-300">
+                                        R
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-300 inline-block">
+                                        غير مصنف ({ast.interpretation})
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-2 font-mono text-[10px] text-slate-600">
+                                    {ast.breakpointRange || 'غير محدد'}
+                                  </td>
+                                  <td className="p-2 text-[11px] leading-relaxed text-slate-700">
+                                    {meaning}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   ))
                 )}

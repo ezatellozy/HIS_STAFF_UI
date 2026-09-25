@@ -66,7 +66,7 @@ export const LaboratoryOpsShell: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('home');
   const [selectedPersona, setSelectedPersona] = useState<LaboratoryPersona>(MOCK_LAB_PERSONAS[0]);
 
-  // Operational State Stores
+  // Operational State Stores (Simulation / Mock Dataset)
   const [orders, setOrders] = useState<IncomingLabOrder[]>(MOCK_INCOMING_ORDERS);
   const [specimens, setSpecimens] = useState<LabSpecimen[]>(MOCK_SPECIMENS);
   const [accessions, setAccessions] = useState<LabAccession[]>(MOCK_CORE_LAB_ACCESSIONS);
@@ -74,6 +74,51 @@ export const LaboratoryOpsShell: React.FC = () => {
   const [pathCases, setPathCases] = useState<PathologyCase[]>(MOCK_PATHOLOGY_CASES);
   const [sendOuts, setSendOuts] = useState<SendOutShipment[]>(MOCK_SEND_OUT_SHIPMENTS);
   const [instruments, setInstruments] = useState<InstrumentOperationalStatus[]>(MOCK_INSTRUMENTS);
+
+  // Live Mode Isolated State Stores (Completely decoupled from mock simulation datasets)
+  const [liveOrders, setLiveOrders] = useState<IncomingLabOrder[]>([]);
+  const [liveSpecimens, setLiveSpecimens] = useState<LabSpecimen[]>([]);
+  const [liveAccessions, setLiveAccessions] = useState<LabAccession[]>([]);
+  const [liveMicroCases, setLiveMicroCases] = useState<MicrobiologyCase[]>([]);
+  const [livePathCases, setLivePathCases] = useState<PathologyCase[]>([]);
+  const [liveSendOuts, setLiveSendOuts] = useState<SendOutShipment[]>([]);
+
+  // Environment Mode (Explicit distinction and strict data-source isolation)
+  const [environmentMode, setEnvironmentMode] = useState<'mock_simulation' | 'live_connected'>('mock_simulation');
+  const isLive = environmentMode === 'live_connected';
+
+  // Active Datasets strictly bound to current environment mode
+  const activeOrders = isLive ? liveOrders : orders;
+  const activeSpecimens = isLive ? liveSpecimens : specimens;
+  const activeAccessions = isLive ? liveAccessions : accessions;
+  const activeMicroCases = isLive ? liveMicroCases : microCases;
+  const activePathCases = isLive ? livePathCases : pathCases;
+  const activeSendOuts = isLive ? liveSendOuts : sendOuts;
+
+  const setTargetOrders = (updater: React.SetStateAction<IncomingLabOrder[]>) => {
+    if (isLive) setLiveOrders(updater);
+    else setOrders(updater);
+  };
+  const setTargetSpecimens = (updater: React.SetStateAction<LabSpecimen[]>) => {
+    if (isLive) setLiveSpecimens(updater);
+    else setSpecimens(updater);
+  };
+  const setTargetAccessions = (updater: React.SetStateAction<LabAccession[]>) => {
+    if (isLive) setLiveAccessions(updater);
+    else setAccessions(updater);
+  };
+  const setTargetMicroCases = (updater: React.SetStateAction<MicrobiologyCase[]>) => {
+    if (isLive) setLiveMicroCases(updater);
+    else setMicroCases(updater);
+  };
+  const setTargetPathCases = (updater: React.SetStateAction<PathologyCase[]>) => {
+    if (isLive) setLivePathCases(updater);
+    else setPathCases(updater);
+  };
+  const setTargetSendOuts = (updater: React.SetStateAction<SendOutShipment[]>) => {
+    if (isLive) setLiveSendOuts(updater);
+    else setSendOuts(updater);
+  };
 
   // Modals & Drawer State
   const [previewDrawerOpen, setPreviewDrawerOpen] = useState(false);
@@ -123,11 +168,11 @@ export const LaboratoryOpsShell: React.FC = () => {
 
   // Action Handlers
   const handleConfirmCollection = (updated: LabSpecimen) => {
-    setSpecimens(prev => prev.map(s => (s.id === updated.id ? updated : s)));
+    setTargetSpecimens(prev => prev.map(s => (s.id === updated.id ? updated : s)));
   };
 
   const handleMarkUnableToCollect = (specimenId: string, reason: string) => {
-    setSpecimens(prev =>
+    setTargetSpecimens(prev =>
       prev.map(s =>
         s.id === specimenId
           ? {
@@ -145,7 +190,7 @@ export const LaboratoryOpsShell: React.FC = () => {
     description: string,
     action: 'recollection_requested' | 'clinician_consulted' | 'test_cancelled'
   ) => {
-    setSpecimens(prev =>
+    setTargetSpecimens(prev =>
       prev.map(s => {
         if (s.id !== specimenId) return s;
         return {
@@ -164,7 +209,7 @@ export const LaboratoryOpsShell: React.FC = () => {
 
     // If recollection requested, automatically generate an associated recollection task linked to original order
     if (action === 'recollection_requested') {
-      const targetSpec = specimens.find(s => s.id === specimenId);
+      const targetSpec = activeSpecimens.find(s => s.id === specimenId);
       if (targetSpec) {
         const recollectionSpec: LabSpecimen = {
           ...targetSpec,
@@ -178,13 +223,13 @@ export const LaboratoryOpsShell: React.FC = () => {
           rejectionInfo: undefined,
           specialInstructions: `إعادة سحب معتمدة لتعويض العينة المرفوضة (${targetSpec.specimenBarcode}) - سبب: ${rejectionCode}`
         };
-        setSpecimens(prev => [recollectionSpec, ...prev]);
+        setTargetSpecimens(prev => [recollectionSpec, ...prev]);
       }
     }
   };
 
   const handleAcceptSpecimen = (specimenId: string) => {
-    setSpecimens(prev =>
+    setTargetSpecimens(prev =>
       prev.map(s =>
         s.id === specimenId
           ? {
@@ -243,16 +288,16 @@ export const LaboratoryOpsShell: React.FC = () => {
       ]
     };
 
-    setAccessions(prev => [newAcc, ...prev]);
+    setTargetAccessions(prev => [newAcc, ...prev]);
     setActiveView('core_lab');
   };
 
   const handleSaveResults = (updatedAcc: LabAccession) => {
-    setAccessions(prev => prev.map(a => (a.id === updatedAcc.id ? updatedAcc : a)));
+    setTargetAccessions(prev => prev.map(a => (a.id === updatedAcc.id ? updatedAcc : a)));
   };
 
   const handleSaveCommunication = (accessionId: string, comm: CriticalResultCommunication) => {
-    setAccessions(prev =>
+    setTargetAccessions(prev =>
       prev.map(a =>
         a.id === accessionId
           ? {
@@ -265,16 +310,23 @@ export const LaboratoryOpsShell: React.FC = () => {
   };
 
   const handleReleaseFinal = (accessionId: string) => {
-    setAccessions(prev =>
-      prev.map(a =>
-        a.id === accessionId
-          ? {
-              ...a,
-              status: 'released',
-              tests: a.tests.map(t => ({ ...t, status: 'final' }))
-            }
-          : a
-      )
+    setTargetAccessions(prev =>
+      prev.map(a => {
+        if (a.id !== accessionId) return a;
+        // Strict governance guard: Missing/unperformed mandatory results cannot be silently released as final!
+        const hasMissingMandatory = a.tests.some(
+          t => t.status !== 'cancelled' && t.numericValue === undefined && !t.textValue
+        );
+        if (hasMissingMandatory) {
+          console.warn(`[Laboratory Governance Block] Accession ${a.accessionNumber} contains missing mandatory results and cannot be released.`);
+          return a;
+        }
+        return {
+          ...a,
+          status: 'released',
+          tests: a.tests.map(t => ({ ...t, status: 'final' }))
+        };
+      })
     );
   };
 
@@ -347,24 +399,42 @@ export const LaboratoryOpsShell: React.FC = () => {
             </div>
           </div>
 
-          {/* Persona Switcher */}
-          <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
-            <Users className="w-4 h-4 text-teal-400" />
-            <span className="text-xs text-slate-300 font-bold">الدور النشط:</span>
-            <select
-              value={selectedPersona.roleId}
-              onChange={e => {
-                const found = MOCK_LAB_PERSONAS.find(p => p.roleId === e.target.value);
-                if (found) setSelectedPersona(found);
-              }}
-              className="bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs font-bold focus:ring-1 focus:ring-teal-500 cursor-pointer"
-            >
-              {MOCK_LAB_PERSONAS.map(p => (
-                <option key={p.roleId} value={p.roleId}>
-                  {p.titleAr}
-                </option>
-              ))}
-            </select>
+          {/* Persona Switcher & Environment Mode Indicator */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-700">
+              <span className="text-[11px] text-slate-400 font-bold">البيئة:</span>
+              <button
+                onClick={() => setEnvironmentMode(prev => prev === 'mock_simulation' ? 'live_connected' : 'mock_simulation')}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-all cursor-pointer flex items-center gap-1 border ${
+                  environmentMode === 'mock_simulation'
+                    ? 'bg-amber-950/60 text-amber-300 border-amber-600/70'
+                    : 'bg-emerald-950/60 text-emerald-300 border-emerald-600/70'
+                }`}
+                title="اضغط للتبديل بين وضع المحاكاة والربط المباشر"
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${environmentMode === 'mock_simulation' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                <span>{environmentMode === 'mock_simulation' ? 'محاكاة سريرية (Mock Simulation)' : 'الوضع المباشر (Live Mode - No LIS Configured)'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
+              <Users className="w-4 h-4 text-teal-400" />
+              <span className="text-xs text-slate-300 font-bold">الدور النشط:</span>
+              <select
+                value={selectedPersona.roleId}
+                onChange={e => {
+                  const found = MOCK_LAB_PERSONAS.find(p => p.roleId === e.target.value);
+                  if (found) setSelectedPersona(found);
+                }}
+                className="bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs font-bold focus:ring-1 focus:ring-teal-500 cursor-pointer"
+              >
+                {MOCK_LAB_PERSONAS.map(p => (
+                  <option key={p.roleId} value={p.roleId}>
+                    {p.titleAr}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -494,15 +564,98 @@ export const LaboratoryOpsShell: React.FC = () => {
         </div>
       </header>
 
+      {/* Environment Mode Demarcation Banner */}
+      <div className={`border-b text-xs py-2 px-4 ${
+        environmentMode === 'mock_simulation'
+          ? 'bg-amber-50 border-amber-200 text-amber-950'
+          : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+      }`}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${environmentMode === 'mock_simulation' ? 'bg-amber-600 animate-pulse' : 'bg-emerald-600'}`} />
+            <span>
+              {environmentMode === 'mock_simulation' ? (
+                <span>
+                  <strong>بيئة المحاكاة والاعتماد السريري (Clinical Simulation & Validation Mode):</strong> جميع السجلات وحالات المزارع والأنسجة المعروضة هي بيانات اختبارية مطابقة لمعايير Joint Commission 2026 وCLSI وCAP وEUCAST v16.1. تم عزلها بالكامل عن قواعد البيانات السريرية الحية لمنع أي خلط تشغيلي.
+                </span>
+              ) : (
+                <span>
+                  <strong>الوضع الحي المباشر (Live Mode):</strong> لا توجد واجهة ربط مخبري LIS نشطة حالياً (No Live Interface Configured). تظل السجلات منفصلة تماماً عن بيئة المحاكاة لتفادي أي خلط بالبيانات السريرية.
+                </span>
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 font-mono text-[11px]">
+            {isLive && (
+              <button
+                type="button"
+                onClick={() => {
+                  const liveOrder: IncomingLabOrder = {
+                    id: `ord-live-${Date.now()}`,
+                    orderNumber: `LIS-LIVE-${Math.floor(10000 + Math.random() * 90000)}`,
+                    patientId: 'p-live-01',
+                    patientName: 'سارة خالد المنصور (مريض حي - LIS Staging)',
+                    mrn: 'MRN-LIVE-9001',
+                    encounterId: 'ENC-LIVE-8801',
+                    encounterDepartment: 'ipd',
+                    bedLocation: 'Ward 4 - Bed 12',
+                    orderingDoctor: 'د. فيصل العتيبي (استشاري باطنة)',
+                    orderingService: 'Inpatient Medicine',
+                    clinicalIndication: 'متابعة وظائف الكلى واضطراب الشوارد (Live HL7 Message Feed)',
+                    priority: 'stat',
+                    targetSection: 'chemistry',
+                    testPanelsRequested: ['لوحة وظائف الكلى والشوارد (Renal & Electrolytes Panel)'],
+                    collectionRequirements: 'دم وريدي - أنبوب مصل مع هلام فاصل (Gold/SST)',
+                    specimenIds: [],
+                    orderDateTime: new Date().toISOString().replace('T', ' ').slice(0, 16),
+                    status: 'received'
+                  };
+                  const liveSpec: LabSpecimen = {
+                    id: `spec-live-${Date.now()}`,
+                    orderId: liveOrder.id,
+                    specimenBarcode: `BC-LIVE-${Math.floor(100000 + Math.random() * 900000)}`,
+                    patientId: liveOrder.patientId,
+                    patientName: liveOrder.patientName,
+                    mrn: liveOrder.mrn,
+                    encounterId: liveOrder.encounterId,
+                    specimenType: 'دم كامل / مصل (Venous Blood)',
+                    collectionLocation: liveOrder.bedLocation || 'Ward 4',
+                    collectionPriority: 'stat',
+                    containerType: 'أنبوب مصل مع هلام فاصل (Gold/SST)',
+                    containerColorHex: '#d97706',
+                    transportCondition: 'ambient',
+                    status: 'pending_collection',
+                    scheduledCollectionTime: new Date().toISOString().replace('T', ' ').slice(0, 16),
+                    specialInstructions: 'عينة حية مرحلية واردة عبر بث HL7 v2.5.1'
+                  };
+                  setLiveOrders(prev => [liveOrder, ...prev]);
+                  setLiveSpecimens(prev => [liveSpec, ...prev]);
+                }}
+                className="px-2 py-0.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-sans text-[10px] font-bold cursor-pointer"
+              >
+                + محاكاة بث رسالة LIS حية
+              </button>
+            )}
+            <span className="px-2 py-0.5 rounded bg-white/80 border border-slate-300 font-bold text-slate-700">
+              المصدر: {environmentMode === 'mock_simulation' ? 'Mock Validated Dataset' : `Isolated LIS Staging (${activeOrders.length} records)`}
+            </span>
+            <span className="text-slate-500">
+              {environmentMode === 'mock_simulation' ? 'v2026.09-Audit' : 'Online / Staging'}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Main View Port Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
         {activeView === 'home' && (
           <LaboratoryOpsHome
-            orders={orders}
-            specimens={specimens}
-            accessions={accessions}
-            microCases={microCases}
-            pathCases={pathCases}
+            orders={activeOrders}
+            specimens={activeSpecimens}
+            accessions={activeAccessions}
+            microCases={activeMicroCases}
+            pathCases={activePathCases}
             instruments={instruments}
             onSelectView={view => setActiveView(view)}
             onPreviewAccession={triggerPreviewAccession}
@@ -517,11 +670,11 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'orders' && (
           <IncomingOrdersView
-            orders={orders}
+            orders={activeOrders}
             onPreviewOrder={triggerPreviewOrder}
             onDeepLinkAxis6={handleDeepLinkAxis6}
             onInitiateCollection={orderId => {
-              const targetSpec = specimens.find(s => s.orderId === orderId);
+              const targetSpec = activeSpecimens.find(s => s.orderId === orderId);
               if (targetSpec) {
                 setActiveSpecimenForCollection(targetSpec);
                 setCollectionModalOpen(true);
@@ -530,7 +683,7 @@ export const LaboratoryOpsShell: React.FC = () => {
               }
             }}
             onRequestClarification={(orderId, note) => {
-              setOrders(prev =>
+              setTargetOrders(prev =>
                 prev.map(o =>
                   o.id === orderId
                     ? {
@@ -547,7 +700,7 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'collection_worklist' && (
           <CollectionWorklistView
-            specimens={specimens}
+            specimens={activeSpecimens}
             onOpenCollectionModal={spec => {
               setActiveSpecimenForCollection(spec);
               setCollectionModalOpen(true);
@@ -561,7 +714,7 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'reception' && (
           <SpecimenReceptionView
-            specimens={specimens}
+            specimens={activeSpecimens}
             onAcceptSpecimen={handleAcceptSpecimen}
             onOpenRejectionModal={spec => {
               setActiveSpecimenForRejection(spec);
@@ -574,7 +727,7 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'core_lab' && (
           <CoreLabWorklistView
-            accessions={accessions}
+            accessions={activeAccessions}
             onOpenResultModal={acc => {
               setActiveAccessionForResult(acc);
               setResultModalOpen(true);
@@ -591,9 +744,9 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'microbiology' && (
           <MicrobiologyWorkspace
-            cases={microCases}
+            cases={activeMicroCases}
             onUpdateCase={updated => {
-              setMicroCases(prev => prev.map(c => (c.id === updated.id ? updated : c)));
+              setTargetMicroCases(prev => prev.map(c => (c.id === updated.id ? updated : c)));
             }}
             onPreviewCase={triggerPreviewMicro}
           />
@@ -601,21 +754,21 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'pathology' && (
           <PathologyWorkspace
-            cases={pathCases}
+            cases={activePathCases}
             onUpdateCase={updated => {
-              setPathCases(prev => prev.map(c => (c.id === updated.id ? updated : c)));
+              setTargetPathCases(prev => prev.map(c => (c.id === updated.id ? updated : c)));
             }}
             onPreviewCase={triggerPreviewPath}
           />
         )}
 
-        {activeView === 'send_out' && <SendOutLabView shipments={sendOuts} />}
+        {activeView === 'send_out' && <SendOutLabView shipments={activeSendOuts} />}
 
         {activeView === 'exceptions' && (
           <ExceptionsDelayedView
-            specimens={specimens}
-            accessions={accessions}
-            orders={orders}
+            specimens={activeSpecimens}
+            accessions={activeAccessions}
+            orders={activeOrders}
             instruments={instruments}
             onOpenRejectionModal={spec => {
               setActiveSpecimenForRejection(spec);
@@ -632,11 +785,11 @@ export const LaboratoryOpsShell: React.FC = () => {
 
         {activeView === 'demo_scenarios' && (
           <LabDemoScenariosView
-            orders={orders}
-            specimens={specimens}
-            accessions={accessions}
-            microCases={microCases}
-            pathCases={pathCases}
+            orders={activeOrders}
+            specimens={activeSpecimens}
+            accessions={activeAccessions}
+            microCases={activeMicroCases}
+            pathCases={activePathCases}
             onNavigateToView={view => setActiveView(view)}
             onPreviewAccession={triggerPreviewAccession}
             onPreviewSpecimen={triggerPreviewSpecimen}

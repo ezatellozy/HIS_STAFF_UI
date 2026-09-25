@@ -722,12 +722,13 @@ export const PatientAccessAdtDashboard: React.FC<PatientAccessAdtDashboardProps>
     );
 
     if (revertBed) {
-      // Revert encounter location
+      // Confirmed bedside that patient never physically departed source bed: revert bed allocation
       setEncounters(prev =>
         prev.map(e =>
           e.id === trf.currentEncounterId
             ? {
                 ...e,
+                physicalLocationReconciliationRequired: false,
                 currentLocation: {
                   ...e.currentLocation,
                   unit: trf.sourceUnit,
@@ -765,6 +766,20 @@ export const PatientAccessAdtDashboard: React.FC<PatientAccessAdtDashboardProps>
           return b;
         })
       );
+    } else {
+      // Documentation correction only (actual physical location uncertain):
+      // Preserve known physical location, do not fabricate restored occupancy, and flag for clinical reconciliation
+      setEncounters(prev =>
+        prev.map(e =>
+          e.id === trf.currentEncounterId
+            ? {
+                ...e,
+                physicalLocationReconciliationRequired: true,
+                physicalLocationNote: 'تم تصحيح توثيق النقل كحركة مسجلة بالخطأ؛ يتطلب مطابقة سريرية ميدانية للموقع الفيزيائي الفعلي للمريض قبل إعادة تخصيص السرير.'
+              }
+            : e
+        )
+      );
     }
 
     const newEvent: PatientMovementEvent = {
@@ -780,10 +795,18 @@ export const PatientAccessAdtDashboard: React.FC<PatientAccessAdtDashboardProps>
       actorName: 'رئيس السجلات الطبية (HIM)',
       actorRole: 'مراجع جودة السجلات الطبية',
       reason: correctionReason,
-      note: 'تصحيح حركة مسجلة بالخطأ واسترجاع تخصيص السرير الأصلي وفق معايير IHE PAM.'
+      correctionReason: correctionReason,
+      correctedEventId: trf.id,
+      note: revertBed
+        ? 'تصحيح توثيق حركة مسجلة بالخطأ في السجل التشغيلي (Mock Operational Movement Correction) مع تأكيد سريري بعدم مغادرة المريض لسريره الأصلي.'
+        : 'تصحيح توثيق حركة مسجلة بالخطأ في السجل التشغيلي؛ حُفظ الموقع الحالي مع طلب مطابقة سريرية ميدانية دون اصطناع انتقال فيزيائي تلقائي.'
     };
     setMovementEvents(prev => [newEvent, ...prev]);
-    showNotification(`تم اعتماد تصريح تصحيح الحركة واسترجاع السرير الأصلي بنجاح.`);
+    showNotification(
+      revertBed
+        ? 'تم تصحيح توثيق الحركة واسترجاع السرير الأصلي بعد التحقق السريري.'
+        : 'تم تصحيح توثيق الحركة في السجل وتأكيد حفظ الموقع الحالي مع طلب مطابقة سريرية ميدانية.'
+    );
   };
 
   // 9d. Temporary Diagnostic Movement Handlers (Bed Retention Invariant)

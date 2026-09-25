@@ -29,6 +29,7 @@ import {
   AntibodyScreenResult,
   CompatibilityRecord,
   BloodProductUnit,
+  ProductProcessingRecord,
   ProductReturnRecord,
   TransfusionReactionCase,
   MassiveTransfusionProtocolSession,
@@ -198,31 +199,126 @@ export const BloodBankOpsShell: React.FC<BloodBankOpsShellProps> = ({ onNavigate
     );
   };
 
-  const handleCompletePreparation = (unitId: string, prepType: string) => {
-    setUnits(prev =>
-      prev.map(u => {
-        if (u.id === unitId) {
-          const newAttributes = [...u.specialAttributes];
-          if (prepType === 'irradiation' && !newAttributes.includes('irradiated')) {
-            newAttributes.push('irradiated');
-          }
+  const handleSavePreparation = (prepData: {
+    sourceUnitId: string;
+    method: any;
+    lifecycleStatus: any;
+    responsibleActor: string;
+    deviceIdentifier: string;
+    resultingIdentity: string;
+    resultingVolumeMl: number;
+    expirySourceCitation: string;
+    postModExpiryDate: string;
+    expiryVerificationStatus: any;
+    quarantineReason?: string;
+    childUnitsData?: Array<{ id: string; unitNumber: string; volumeMl: number; label: string }>;
+    contributingUnitIds?: string[];
+    poolIdentifier?: string;
+    newAttributes: any[];
+  }) => {
+    const processingRecord: ProductProcessingRecord = {
+      id: `PROC-${Math.floor(1000 + Math.random() * 9000)}`,
+      sourceUnitIds: [prepData.sourceUnitId],
+      sourceProductIdentity: prepData.resultingIdentity,
+      processingMethod: prepData.method,
+      processingMethodAr:
+        prepData.method === 'irradiation' ? 'تشعيع المشتق (Irradiation)' :
+        prepData.method === 'thawing' ? 'إذابة المشتق (Thawing)' :
+        prepData.method === 'cryo_pooling' ? 'دمج الراسب البرودي (Cryo Pooling)' :
+        prepData.method === 'washing' ? 'غسيل الكريات (Washing)' : 'تجزئة وحدات الأطفال (Splitting)',
+      status: prepData.lifecycleStatus,
+      requestedAt: 'اليوم 09:00 ص',
+      completedAt: 'الآن',
+      responsibleSimulatedActor: prepData.responsibleActor,
+      deviceIdentifier: prepData.deviceIdentifier,
+      resultingProductIdentity: prepData.resultingIdentity,
+      resultingVolumeMl: prepData.resultingVolumeMl,
+      poolIdentifier: prepData.poolIdentifier,
+      expirySource: prepData.expirySourceCitation,
+      expiryVerificationStatus: prepData.expiryVerificationStatus,
+      calculatedExpiryDate: prepData.postModExpiryDate,
+      quarantineOrRejectionReason: prepData.quarantineReason,
+      isOptionalHospitalCapability: true
+    };
+
+    setUnits(prev => {
+      let updated = prev.map(u => {
+        if (u.id === prepData.sourceUnitId) {
+          // Safety Rule: Preexisting quarantine status MUST be preserved. Processing does not lift quarantine.
+          const isPreExistingQuarantine = u.status === 'quarantined';
+          const isQuarantined = isPreExistingQuarantine || prepData.lifecycleStatus === 'rejected_quarantined';
+          const isVerified = prepData.lifecycleStatus === 'verified';
+
           return {
             ...u,
-            specialAttributes: newAttributes,
-            status: 'ready_for_issue',
+            specialAttributes: prepData.newAttributes,
+            // Preserve original supplier/collection expiry vs verified post-processing expiry
+            originalExpiryDate: u.originalExpiryDate || u.expiryDate,
+            postProcessingVerifiedExpiry: prepData.postModExpiryDate,
+            // Do NOT set ready_for_issue or in_preparation if already quarantined!
+            status: isQuarantined ? ('quarantined' as const) : ('in_preparation' as const),
+            isEligibleForNextStep: isVerified,
+            expiryVerificationStatus: prepData.expiryVerificationStatus,
+            childUnitIds: prepData.childUnitsData?.map(c => c.id) || u.childUnitIds,
+            contributingUnitIds: prepData.contributingUnitIds || u.contributingUnitIds,
+            poolIdentifier: prepData.poolIdentifier || u.poolIdentifier,
+            processingHistory: [...(u.processingHistory || []), processingRecord],
+            modificationExpiryDetails: {
+              newExpiryDate: prepData.postModExpiryDate,
+              regulatorySource: prepData.expirySourceCitation,
+              standardVersion: 'v8 / 35th Ed',
+              specificConditionAr: 'وفق المعيار السريري المعتمد',
+              verificationStatus: prepData.expiryVerificationStatus,
+              verifiedBy: prepData.responsibleActor
+            },
             preparationState: {
-              isIrradiated: prepType === 'irradiation' || u.preparationState?.isIrradiated,
-              irradiatedAt: prepType === 'irradiation' ? 'الآن' : u.preparationState?.irradiatedAt,
-              isThawed: prepType === 'thawing' || u.preparationState?.isThawed,
-              thawedAt: prepType === 'thawing' ? 'الآن' : u.preparationState?.thawedAt,
-              thawExpiry: prepType === 'thawing' ? 'صالح لمدة 24 ساعة عند 2-6°C' : u.preparationState?.thawExpiry,
-              isWashed: prepType === 'washing' || u.preparationState?.isWashed
+              isIrradiated: prepData.method === 'irradiation' || u.preparationState?.isIrradiated,
+              irradiatedAt: prepData.method === 'irradiation' ? 'الآن' : u.preparationState?.irradiatedAt,
+              isThawed: prepData.method === 'thawing' || prepData.method === 'cryo_pooling' || u.preparationState?.isThawed,
+              thawedAt: prepData.method === 'thawing' || prepData.method === 'cryo_pooling' ? 'الآن' : u.preparationState?.thawedAt,
+              thawExpiry: prepData.postModExpiryDate,
+              isWashed: prepData.method === 'washing' || u.preparationState?.isWashed,
+              isPooled: prepData.method === 'cryo_pooling' || u.preparationState?.isPooled,
+              isSplit: prepData.method === 'pediatric_splitting' || u.preparationState?.isSplit
             }
           };
         }
         return u;
-      })
-    );
+      });
+
+      // If pediatric splitting was performed, add child aliquot units without deleting parent unit history
+      if (prepData.childUnitsData && prepData.childUnitsData.length > 0) {
+        const parent = prev.find(u => u.id === prepData.sourceUnitId);
+        if (parent) {
+          const childUnits: BloodProductUnit[] = prepData.childUnitsData.map((child, idx) => ({
+            id: child.id,
+            unitNumber: child.unitNumber,
+            componentType: parent.componentType,
+            componentNameAr: `${parent.componentNameAr} - حصة أطفال ${idx + 1}`,
+            componentNameEn: `${parent.componentNameEn} Pediatric Aliquot ${idx + 1}`,
+            bloodGroup: parent.bloodGroup,
+            volumeMl: child.volumeMl,
+            collectionDate: parent.collectionDate,
+            originalExpiryDate: parent.originalExpiryDate || parent.expiryDate,
+            postProcessingVerifiedExpiry: prepData.postModExpiryDate,
+            expiryDate: prepData.postModExpiryDate || parent.expiryDate,
+            expiryVerificationStatus: prepData.expiryVerificationStatus,
+            isNearExpiry: parent.isNearExpiry,
+            storageLocation: 'ثلاجة دم الأطفال وحديثي الولادة - الرف P1',
+            storageTemperatureC: parent.storageTemperatureC,
+            specialAttributes: [...parent.specialAttributes, 'pediatric_split'],
+            status: (parent.status === 'quarantined' || prepData.lifecycleStatus === 'rejected_quarantined') ? 'quarantined' : 'in_preparation',
+            parentUnitId: parent.id,
+            isEligibleForNextStep: prepData.lifecycleStatus === 'verified',
+            processingHistory: [processingRecord]
+          }));
+
+          updated = [...updated, ...childUnits];
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleConfirmIssue = (issueData: any) => {
@@ -766,22 +862,14 @@ export const BloodBankOpsShell: React.FC<BloodBankOpsShellProps> = ({ onNavigate
             onSelectSample={sample => {
               setPreviewDrawerData({ isOpen: true, type: 'sample', data: sample });
             }}
-            onAcceptSample={sampleId => {
-              setSamples(prev =>
-                prev.map(s => (s.id === sampleId ? { ...s, status: 'accepted' } : s))
-              );
-            }}
-            onRejectSample={(sampleId, reason) => {
-              setSamples(prev =>
-                prev.map(s =>
-                  s.id === sampleId
-                    ? { ...s, status: 'rejected_clerical_error', rejectionReason: reason }
-                    : s
-                )
-              );
-            }}
-            onNavigateToTyping={sampleId => {
+            onOpenGroupingWorkspace={sampleId => {
               setActiveTab('grouping');
+            }}
+            onOpenAntibodyWorkspace={sampleId => {
+              setActiveTab('screen');
+            }}
+            onUpdateSample={updatedSample => {
+              setSamples(prev => prev.map(s => (s.id === updatedSample.id ? updatedSample : s)));
             }}
           />
         )}
@@ -887,9 +975,25 @@ export const BloodBankOpsShell: React.FC<BloodBankOpsShellProps> = ({ onNavigate
         isOpen={!!selectedRequestForDetail}
         onClose={() => setSelectedRequestForDetail(null)}
         request={selectedRequestForDetail}
-        onStartAllocation={reqId => {
+        allUnits={units}
+        onOpenSampleWorkspace={sampleId => {
           setSelectedRequestForDetail(null);
-          handleOpenAllocation(reqId);
+          setActiveTab('samples');
+        }}
+        onOpenCompatibilityWorkspace={reqId => {
+          setSelectedRequestForDetail(null);
+          setActiveTab('crossmatch');
+        }}
+        onOpenAllocationModal={req => {
+          setSelectedRequestForDetail(null);
+          handleOpenAllocation(req.id);
+        }}
+        onOpenIssueModal={req => {
+          setSelectedRequestForDetail(null);
+          const firstAllocated = units.find(u => req.allocatedUnitIds.includes(u.id));
+          if (firstAllocated) {
+            setSelectedIssueContext({ request: req, unit: firstAllocated });
+          }
         }}
       />
 
@@ -905,7 +1009,8 @@ export const BloodBankOpsShell: React.FC<BloodBankOpsShellProps> = ({ onNavigate
         isOpen={!!selectedUnitForPrep}
         onClose={() => setSelectedUnitForPrep(null)}
         unit={selectedUnitForPrep}
-        onCompletePreparation={handleCompletePreparation}
+        allUnits={units}
+        onSavePreparation={handleSavePreparation}
       />
 
       <ProductIssueModal

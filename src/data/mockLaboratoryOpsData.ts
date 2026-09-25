@@ -749,6 +749,58 @@ export const MOCK_MICROBIOLOGY_CASES: MicrobiologyCase[] = [
             standardUsed: 'eucast',
             standardVersion: 'EUCAST v14.0 (2026)',
             breakpointRange: 'S <= 0.12 mg/L, R > 0.12 mg/L'
+          },
+          {
+            id: 'ast-7',
+            antimicrobial: 'Piperacillin-Tazobactam',
+            method: 'automated_mic',
+            measuredValue: '16.0 mcg/mL',
+            interpretation: 'I',
+            technicalUncertainty: true,
+            interpretationMeaning: 'Area of Technical Uncertainty (ATU: عدم يقين فني - يوصى بإعادة الفحص أو اختيار بديل)',
+            standardUsed: 'eucast',
+            standardVersion: 'EUCAST v14.0 (2026)',
+            breakpointRange: 'ATU 8 - 16 mg/L',
+            comments: 'يقع التركيز ضمن نطاق عدم اليقين الفني (ATU) في EUCAST؛ يجب عدم اعتباره مقاوماً تلقائياً.'
+          },
+          {
+            id: 'ast-8',
+            antimicrobial: 'Tigecycline',
+            method: 'automated_mic',
+            measuredValue: '0.25 mcg/mL',
+            interpretation: 'NO_BREAKPOINT',
+            noBreakpoint: true,
+            interpretationMeaning: 'لا يوجد حد سريري معتمد (No Clinical Breakpoint - Report raw MIC only)',
+            standardUsed: 'eucast',
+            standardVersion: 'EUCAST v14.0 (2026)',
+            breakpointRange: 'No Breakpoint Established',
+            comments: 'لا تتوفر حدود سريرية معتمدة من اللجنة؛ يعرض تركيز MIC فقط دون تصنيف S/I/R قسري.'
+          },
+          {
+            id: 'ast-9',
+            antimicrobial: 'Daptomycin (Reserve Agent)',
+            method: 'automated_mic',
+            measuredValue: '0.5 mcg/mL',
+            interpretation: 'S',
+            selectiveReportingSuppressed: true,
+            interpretationMeaning: 'حساس (مضاد احتياطي محجوب سريرياً وفق سياسة ترشيد المضادات AMS)',
+            standardUsed: 'eucast',
+            standardVersion: 'EUCAST v14.0 (2026)',
+            breakpointRange: 'S <= 1 mg/L, R > 1 mg/L',
+            comments: 'مضاد حيوي خط احتياطي (Restricted Reserve Agent). لا ينشر في تقرير الطبيب العام إلا بطلب استشاري الأمراض المعدية.'
+          },
+          {
+            id: 'ast-10',
+            antimicrobial: 'Aztreonam',
+            method: 'automated_mic',
+            measuredValue: '> 32 mcg/mL',
+            interpretation: 'R',
+            intrinsicResistance: true,
+            interpretationMeaning: 'مقاومة فطرية طبيعية (Intrinsic Resistance for Gram-positive cocci)',
+            standardUsed: 'eucast',
+            standardVersion: 'EUCAST v14.0 (2026)',
+            breakpointRange: 'Intrinsic Resistance',
+            comments: 'مقاومة طبيعية معروفة لجميع المكورات العنقودية؛ تم تطبيق قاعدة الخبراء (Expert Rule Override).'
           }
         ]
       }
@@ -910,6 +962,145 @@ export const MOCK_PATHOLOGY_CASES: PathologyCase[] = [
           note: 'ملحق توضيحي (Addendum): تم تأكيد إيجابية فحص BRAF V600E عبر تقنية الـ IHC لدعم القرار العلاجي في عيادة الغدد الصماء المشتركة.'
         }
       ]
+    }
+  },
+  {
+    id: 'path-case-02',
+    caseNumber: 'SURG-2026-0913-0014',
+    domain: 'surgical_pathology',
+    orderId: 'ord-104',
+    patientId: 'p-4',
+    patientName: 'عائشة ناصر العتيبي',
+    mrn: 'MRN-2026-9041',
+    encounterId: 'enc-or-715',
+    orderingClinician: 'د. سلمان الحربي',
+    clinicalDepartment: 'General & Minimally Invasive Surgery',
+    procedureName: 'Laparoscopic Cholecystectomy (استئصال المرارة بالمنظار)',
+    specimenDescription: 'Gallbladder intact with multiple dark pigmented calculi',
+    clinicalHistory: 'A 38-year-old female with symptomatic cholelithiasis and recurrent biliary colic.',
+    lateralitySite: 'المرارة والقناة المرارية (Gallbladder)',
+    containerCount: 1,
+    containers: [
+      {
+        containerNumber: 1,
+        containerLabel: 'Gallbladder Specimen in Formalin',
+        fixative: '10% Neutral Buffered Formalin (NBF)',
+        tissueSource: 'Gallbladder'
+      }
+    ],
+    procedureDateTime: '2026-09-13 10:15',
+    receivedDateTime: '2026-09-13 10:45',
+    priority: 'routine',
+    status: 'signed_out',
+    assignedPathologist: 'د. نادية عبدالحميد (استشاري باثولوجي الأنسجة)',
+    grossExamination: {
+      performedBy: 'أخصائي الباثولوجي: د. وليد الدوسري',
+      performedAt: '2026-09-13 12:00',
+      specimenOrientation: 'كيس مراري بطول 7.5 سم وقطر 3.0 سم، السطح المصلي رمادي محتقن، السطح الكبدي أملس.',
+      dimensions: '7.5 × 3.0 × 2.5 سم',
+      weightGrams: 35.0,
+      inkColorsUsed: [
+        { color: 'Black Ink', marginSite: 'Cystic Duct Margin (حافة القناة المرارية)' }
+      ],
+      grossDescription:
+        'عينة مرارة مستأصلة تفتح لتظهر مخاطية مخملية خضراء مصفرة مع وجود حصوات متعددة داكنة متفاوتة الأحجام (أكبرها 1.1 سم). سماكة الجدار 0.3 سم دون كتل صلبة.',
+      imagesMockCount: 1,
+      blocks: [
+        {
+          blockId: 'A1',
+          cassetteColor: 'Yellow',
+          tissueDescription: 'Cystic duct resection margin, shaved en face',
+          numberOfPieces: 1,
+          slidesCount: 1,
+          status: 'slide_ready'
+        },
+        {
+          blockId: 'A2',
+          cassetteColor: 'Yellow',
+          tissueDescription: 'Gallbladder neck and representative body wall',
+          numberOfPieces: 2,
+          slidesCount: 1,
+          status: 'slide_ready'
+        }
+      ]
+    },
+    report: {
+      signoutPathologist: 'د. نادية عبدالحميد (استشاري باثولوجي)',
+      signedOutAt: '2026-09-13 15:45',
+      reportingProfile: 'narrative_benign',
+      finalDiagnosis:
+        'GALLBLADDER, CHOLECYSTECTOMY:\n- CHRONIC CALCULOUS CHOLECYSTITIS WITH ROCHITANSKY-ASCHOFF SINUSES.\n- CHOLELITHIASIS (MULTIPLE PIGMENTED CALCULI).\n- CYSTIC DUCT RESECTION MARGIN: UNREMARKABLE.\n- NEGATIVE FOR DYSPLASIA OR MALIGNANCY.',
+      microscopicDescription:
+        'Sections demonstrate gallbladder wall showing mild mucosal chronic inflammatory cell infiltrates composed of lymphocytes and plasma cells. Hypertrophied muscularis with Rokitansky-Aschoff sinuses extending into muscular layer. No intestinal metaplasia, dysplasia, or neoplasia identified.',
+      grossDescriptionRef: 'Ref: Gross Exam on 2026-09-13 by Dr. Walid Al-Dossari',
+      synopticChecklist: {
+        isCancerCase: false,
+        histologicType: 'Chronic Calculous Cholecystitis (Benign Inflammatory Condition)',
+        marginsStatus: 'Cystic duct margin benign and widely negative',
+        pathologicStaging: 'Not Applicable (Non-neoplastic/Benign Pathology)'
+      },
+      ancillaryStudies: [],
+      pathologistComments: 'Benign histology. Routine surgical case closed without need for oncological synoptic staging.'
+    }
+  },
+  {
+    id: 'path-case-03',
+    caseNumber: 'CYTO-2026-0913-0005',
+    domain: 'cytopathology',
+    orderId: 'ord-105',
+    patientId: 'p-6',
+    patientName: 'مها عبدالعزيز الخالدي',
+    mrn: 'MRN-2026-4412',
+    encounterId: 'enc-opd-210',
+    orderingClinician: 'د. أريج الراجحي',
+    clinicalDepartment: 'Endocrinology Outpatient Clinic',
+    procedureName: 'Fine Needle Aspiration Cytology (FNAC) - Left Thyroid Nodule',
+    specimenDescription: '4 direct smears (2 alcohol-fixed, 2 air-dried) plus CytoLyt rinse needle wash',
+    clinicalHistory: 'A 49-year-old female presenting with asymptomatic EU-TIRADS 3 left thyroid nodule (1.6 cm).',
+    lateralitySite: 'الغدة الدرقية - الفص الأيسر (Left Thyroid Nodule)',
+    containerCount: 2,
+    containers: [
+      {
+        containerNumber: 1,
+        containerLabel: 'Thyroid FNA Direct Smears (Slides 1-4)',
+        fixative: '95% Ethanol & Air Dried',
+        tissueSource: 'Left Thyroid Nodule FNA'
+      },
+      {
+        containerNumber: 2,
+        containerLabel: 'Needle Wash Cell Block Fluid',
+        fixative: 'CytoLyt Fixative',
+        tissueSource: 'Needle rinse fluid'
+      }
+    ],
+    procedureDateTime: '2026-09-13 11:30',
+    receivedDateTime: '2026-09-13 11:55',
+    priority: 'routine',
+    status: 'signed_out',
+    assignedPathologist: 'د. نادية عبدالحميد (استشاري باثولوجي نسيجي وخلوي)',
+    cytologyData: {
+      adequacyStatus: 'satisfactory',
+      adequacyComment: 'Satisfactory for evaluation (contains > 6 well-preserved clusters of benign follicular cells on each of 2 slides).',
+      screeningFindings: 'Abundant colloid in thick and thin background films with cohesive flat monolayer sheets (honeycomb) of bland follicular epithelial cells without nuclear enlargement, inclusions, or grooves.',
+      classificationSystem: 'The Bethesda System for Reporting Thyroid Cytopathology (TBSRTC 3rd Ed, 2023)',
+      bethesdaCategory: 'Category II: Benign (Consistent with Benign Follicular / Colloid Nodule)',
+      riskOfMalignancy: '< 3% (Standard clinical follow-up recommended)'
+    },
+    report: {
+      signoutPathologist: 'د. نادية عبدالحميد (Fellow, International Academy of Cytology)',
+      signedOutAt: '2026-09-13 16:15',
+      reportingProfile: 'cytology_adequacy',
+      finalDiagnosis:
+        'LEFT THYROID NODULE, FINE NEEDLE ASPIRATION (FNA):\n- BETHESDA CATEGORY II: BENIGN THYROID NODULE (COLLOID NODULE).\n- ABUNDANT COLLOID WITH BENIGN FOLLICULAR CELLS.\n- NO CYTOLOGICAL EVIDENCE OF MALIGNANCY.',
+      microscopicDescription:
+        'Smears and cell block preparations reveal abundant watery and dense colloid with macrophages and regular monolayered sheets of uniform follicular cells. Nuclei are round with smooth contours and even chromatin. No papillary clusters or nuclear pseudoinclusions seen.',
+      synopticChecklist: {
+        isCancerCase: false,
+        histologicType: 'Benign Thyroid Follicular / Colloid Nodule',
+        pathologicStaging: 'Not Applicable (Cytology FNA Specimen)'
+      },
+      ancillaryStudies: [],
+      pathologistComments: 'Cytological findings are benign. Routine clinical and ultrasonographic follow-up as indicated.'
     }
   }
 ];

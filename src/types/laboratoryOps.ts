@@ -51,6 +51,7 @@ export type TestResultStatus =
   | 'final'
   | 'corrected'
   | 'amended'
+  | 'cancelled'
   | 'entered_in_error';
 
 export type ResultFlag = 'normal' | 'abnormal_low' | 'abnormal_high' | 'critical_low' | 'critical_high';
@@ -79,19 +80,23 @@ export interface SpecimenRejectionPolicy {
 
 export type ASTInterpretationStandard = 'eucast' | 'clsi' | 'local_standard';
 
-export type ASTInterpretation = 'S' | 'I' | 'R' | 'SDD' | 'NS';
+export type ASTInterpretation = 'S' | 'I' | 'R' | 'SDD' | 'NS' | 'ATU' | 'NO_BREAKPOINT';
 
 export interface ASTResultRow {
   id: string;
   antimicrobial: string;
   method: 'automated_mic' | 'e_test' | 'disk_diffusion';
   measuredValue: string; // e.g. "<= 0.5 mcg/mL" or "18 mm"
-  interpretation: ASTInterpretation;
-  interpretationMeaning: string; // EUCAST: "Susceptible, increased exposure" / CLSI: "Intermediate"
+  interpretation?: ASTInterpretation; // Optional when uninterpreted or no breakpoint
+  interpretationMeaning?: string; // EUCAST: "Susceptible, increased exposure" / CLSI: "Intermediate"
   standardUsed: ASTInterpretationStandard;
-  standardVersion: string; // e.g. "EUCAST v14.0 (2026)"
+  standardVersion: string; // e.g. "EUCAST v16.1 (2026)" or "CLSI M100 Ed36 (2026)"
   breakpointRange: string;
   comments?: string;
+  technicalUncertainty?: boolean | string; // true or "ATU - Area of Technical Uncertainty"
+  noBreakpoint?: boolean; // true if no clinical breakpoint is established
+  selectiveReportingSuppressed?: boolean; // true if restricted by AMS stewardship policy
+  intrinsicResistance?: boolean; // true if organism is intrinsically resistant
 }
 
 export interface OrganismIdentification {
@@ -198,21 +203,46 @@ export interface AncillaryTestItem {
   resultSummary?: string;
 }
 
+export interface SynopticStructuredElement {
+  key: string;
+  label: string;
+  value: string;
+  isRequired?: boolean;
+}
+
+export interface SynopticChecklistData {
+  organization?: 'CAP' | 'ICCR' | 'Local';
+  isCancerCase?: boolean; // false for non-cancer benign resections
+  protocolIdentifier?: string; // e.g. "Thyroid.Carcinoma.Resection"
+  protocolVersion?: string; // e.g. "v4.3.0.0 (June 2024)"
+  tumorSite?: string; // e.g. "Thyroid Gland"
+  procedureApplicability?: string; // e.g. "Hemithyroidectomy / Total Thyroidectomy"
+  structuredElements?: SynopticStructuredElement[];
+  histologicType?: string;
+  histologicGrade?: string;
+  tumorSize?: string;
+  marginsStatus?: string;
+  lymphovascularInvasion?: string;
+  pathologicStaging?: string; // e.g. "pT2 pN0 (0/14) cM0"
+}
+
+export interface CytologyExaminationData {
+  adequacyStatus: 'satisfactory' | 'unsatisfactory' | 'limited';
+  adequacyComment: string;
+  screeningFindings: string;
+  classificationSystem: string; // e.g. "The Bethesda System for Reporting Thyroid Cytopathology (2023)"
+  bethesdaCategory: string; // e.g. "Category II: Benign"
+  riskOfMalignancy?: string;
+}
+
 export interface PathologyReportData {
   signoutPathologist: string;
   signedOutAt?: string;
-  reportingProfile: 'cap_synoptic' | 'local_standard_synoptic' | 'narrative_standard';
+  reportingProfile: 'cap_synoptic' | 'local_standard_synoptic' | 'narrative_standard' | 'narrative_benign' | 'cytology_adequacy';
   finalDiagnosis: string;
   microscopicDescription: string;
-  grossDescriptionRef: string;
-  synopticChecklist?: {
-    histologicType: string;
-    histologicGrade: string;
-    tumorSize: string;
-    marginsStatus: string;
-    lymphovascularInvasion: string;
-    pathologicStaging: string; // e.g. "pT2 pN0 (0/14) cM0"
-  };
+  grossDescriptionRef?: string;
+  synopticChecklist?: SynopticChecklistData;
   ancillaryStudies: AncillaryTestItem[];
   pathologistComments?: string;
   addenda?: {
@@ -226,7 +256,7 @@ export interface PathologyReportData {
 export interface PathologyCase {
   id: string;
   caseNumber: string; // e.g. "SURG-2026-0891"
-  domain: 'surgical_pathology' | 'cytology' | 'frozen_section';
+  domain: 'surgical_pathology' | 'cytology' | 'cytopathology' | 'frozen_section';
   orderId: string;
   patientId: string;
   patientName: string;
@@ -251,6 +281,7 @@ export interface PathologyCase {
   status: PathologyCaseStatus;
   assignedPathologist: string;
   grossExamination?: GrossExaminationData;
+  cytologyData?: CytologyExaminationData;
   report?: PathologyReportData;
 }
 
@@ -268,7 +299,7 @@ export interface TestResultItem {
   referenceHigh?: number;
   criticalLow?: number;
   criticalHigh?: number;
-  flag: ResultFlag;
+  flag?: ResultFlag; // Optional: pending/missing test does NOT have a flag
   previousValue?: string;
   previousDelta?: string; // e.g. "+ 1.8 (within 4h)"
   instrumentName: string; // e.g. "Roche Cobas 8000 - Unit A"
@@ -278,12 +309,14 @@ export interface TestResultItem {
   technicallyVerifiedAt?: string;
   version: number;
   versionHistory?: ResultVersionAudit[];
+  dispositionReason?: string; // e.g. "Hemolysis interference", "QNS for this test"
+  dispositionClinicalNote?: string;
 }
 
 export interface ResultVersionAudit {
   version: number;
   value: string;
-  flag: ResultFlag;
+  flag?: ResultFlag;
   status: TestResultStatus;
   amendedBy: string;
   amendedAt: string;
@@ -291,16 +324,38 @@ export interface ResultVersionAudit {
   clinicalNote?: string;
 }
 
+export type CriticalPolicyProfile =
+  | 'policy_inpatient_readback'
+  | 'policy_outpatient_direct'
+  | 'policy_unconfigured';
+
+export type CriticalAttemptOutcome =
+  | 'delivered_successful'
+  | 'contact_failed'
+  | 'alternate_recipient'
+  | 'escalated_in_progress';
+
 export interface CriticalResultCommunication {
   isCritical: boolean;
   requiredPolicy: 'read_back_required' | 'verbal_acknowledgement' | 'electronic_escalation';
+  policyProfile?: CriticalPolicyProfile;
   identifiedAt?: string;
+  communicationAttemptTimestamp?: string;
+  attemptOutcome?: CriticalAttemptOutcome;
+  channel?: 'telephone' | 'secure_critical_messaging' | 'in_person_ward';
+  intendedRecipient?: string;
+  intendedTeam?: string;
   communicatedTo?: string;
   communicatedToRole?: string;
   communicatedAt?: string;
   callerStaffName?: string;
   readBackConfirmed: boolean;
   acknowledgementStatus: 'pending' | 'acknowledged' | 'escalated';
+  escalationTarget?: string;
+  escalationStatus?: 'none' | 'initiated' | 'completed';
+  failureReason?: string;
+  failureAttemptDetails?: string;
+  clinicalFollowUpPending?: boolean;
   communicationNote?: string;
 }
 

@@ -15,7 +15,11 @@ import {
   Users,
   ShieldCheck,
   Building2,
-  ArrowLeft
+  ArrowLeft,
+  FileCheck,
+  ShieldAlert,
+  Package,
+  AlertTriangle
 } from 'lucide-react';
 import {
   PharmacyServiceType,
@@ -29,7 +33,11 @@ import {
   DischargeMedicationSupply,
   MedicationReturnContext,
   CancelledAfterPreparationContext,
-  VerificationDecision
+  VerificationDecision,
+  EmergencyExceptionRecord,
+  PharmacyReceivingRecord,
+  MedicationRecallRecord,
+  PharmacyOrgContext
 } from '../../types/pharmacyOps';
 import {
   INITIAL_PHARMACY_ORDERS,
@@ -39,7 +47,11 @@ import {
   INITIAL_DISCHARGE_SUPPLIES,
   INITIAL_MEDICATION_RETURNS,
   INITIAL_CANCELLED_PREPARATIONS,
-  INITIAL_PHARMACY_METRICS
+  INITIAL_PHARMACY_METRICS,
+  INITIAL_EMERGENCY_EXCEPTIONS,
+  INITIAL_RECEIVING_RECORDS,
+  INITIAL_MEDICATION_RECALLS,
+  INITIAL_PHARMACY_ORG_CONTEXT
 } from '../../data/mockPharmacyOpsData';
 
 import { PharmacyOperationalHome } from './PharmacyOperationalHome';
@@ -49,6 +61,10 @@ import { DispensingQueueView } from './DispensingQueueView';
 import { DischargeMedicationView } from './DischargeMedicationView';
 import { ReturnsExceptionsView } from './ReturnsExceptionsView';
 import { InterventionsListView } from './InterventionsListView';
+import { EmergencyExceptionsView } from './EmergencyExceptionsView';
+import { InventoryReceivingView } from './InventoryReceivingView';
+import { MedicationRecallView } from './MedicationRecallView';
+import { MedicationCatalogReferenceModal } from './MedicationCatalogReferenceModal';
 import { MedicationVerificationModal } from './MedicationVerificationModal';
 import { PharmacyInterventionModal } from './PharmacyInterventionModal';
 import { StandardPreparationModal } from './StandardPreparationModal';
@@ -105,6 +121,13 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
   const [labelPreviewWorksheet, setLabelPreviewWorksheet] = useState<CompoundingWorksheet | null>(null);
   const [labelPreviewDispense, setLabelPreviewDispense] = useState<DispenseRecord | null>(null);
   const [isScenariosModalOpen, setIsScenariosModalOpen] = useState(false);
+  const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
+
+  // Extended Operational State: Emergency Exceptions, Receiving, Recalls, Org Context
+  const [emergencyExceptions, setEmergencyExceptions] = useState<EmergencyExceptionRecord[]>(INITIAL_EMERGENCY_EXCEPTIONS);
+  const [receivingRecords, setReceivingRecords] = useState<PharmacyReceivingRecord[]>(INITIAL_RECEIVING_RECORDS);
+  const [recalls, setRecalls] = useState<MedicationRecallRecord[]>(INITIAL_MEDICATION_RECALLS);
+  const [orgContext, setOrgContext] = useState<PharmacyOrgContext>(INITIAL_PHARMACY_ORG_CONTEXT);
 
   // Handlers for Operational Decisions
   const handleConfirmVerification = (orderId: string, decision: VerificationDecision, note?: string) => {
@@ -340,8 +363,88 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
     );
   };
 
+  const handleApproveRetrospectiveReview = (id: string, notes: string) => {
+    setEmergencyExceptions(prev =>
+      prev.map(exc => {
+        if (exc.id === id) {
+          return {
+            ...exc,
+            retrospectiveStatus: 'approved',
+            reviewedByPharmacist: 'د. ليلى عبد الحميد (صيدلي إكلينيكي)',
+            reviewedAt: 'الآن',
+            pharmacistNotes: notes || exc.pharmacistNotes
+          };
+        }
+        return exc;
+      })
+    );
+  };
+
+  const handleRequestClarificationException = (id: string, notes: string) => {
+    setEmergencyExceptions(prev =>
+      prev.map(exc => {
+        if (exc.id === id) {
+          return {
+            ...exc,
+            retrospectiveStatus: 'clarification_requested',
+            pharmacistNotes: notes
+          };
+        }
+        return exc;
+      })
+    );
+  };
+
+  const handleUpdateInspectionStatus = (
+    recordId: string,
+    status: PharmacyReceivingRecord['inspectionStatus'],
+    acceptedQty: number,
+    quarantinedQty: number,
+    notes: string
+  ) => {
+    setReceivingRecords(prev =>
+      prev.map(rec => {
+        if (rec.id === recordId) {
+          return {
+            ...rec,
+            inspectionStatus: status,
+            acceptedQuantity: acceptedQty,
+            quarantinedQuantity: quarantinedQty,
+            inspectionNotes: notes,
+            inspectedBy: 'ماجد الشريف (فني صيدلة معتمد)',
+            inspectedAt: 'الآن'
+          };
+        }
+        return rec;
+      })
+    );
+  };
+
+  const handleQuarantineLocation = (recallId: string, locationName: string) => {
+    setRecalls(prev =>
+      prev.map(rec => {
+        if (rec.id === recallId) {
+          const updatedLocs = rec.affectedLocations.map(loc =>
+            loc.locationName === locationName ? { ...loc, quarantineStatus: 'quarantined' as const } : loc
+          );
+          const allQuarantined = updatedLocs.every(loc => loc.quarantineStatus === 'quarantined');
+          return {
+            ...rec,
+            affectedLocations: updatedLocs,
+            recallStatus: allQuarantined ? 'quarantine_complete' : 'quarantine_in_progress'
+          };
+        }
+        return rec;
+      })
+    );
+  };
+
   // Scenario Launcher Handler
   const handleSelectScenario = (scenarioKey: string, targetTab: PharmacyViewTab, targetOrderId?: string) => {
+    if ((targetTab as string) === 'catalog_reference') {
+      setIsCatalogModalOpen(true);
+      return;
+    }
     setActiveTab(targetTab);
     if (targetOrderId) {
       const order = orders.find(o => o.id === targetOrderId);
@@ -357,8 +460,23 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans" dir="rtl">
+      {/* Persistent Synthetic Design Preview Banner */}
+      <div className="bg-amber-800 text-white px-4 py-1.5 text-center text-xs font-bold shadow-xs flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping"></span>
+          <span>معاينة تصميم محاكاة — لا توجد بيانات مرضى حقيقية (Synthetic Design Preview — No real patient data)</span>
+        </div>
+        <div className="flex items-center gap-4 text-[10px] font-mono text-amber-200">
+          <span>Verification ≠ Administration</span>
+          <span>•</span>
+          <span>Missing ≠ Zero</span>
+          <span>•</span>
+          <span>Overnight Sync ≠ Retrospective Clearance</span>
+        </div>
+      </div>
+
       {/* Top Header & Service Bar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <header className="bg-white border-b border-slate-200 sticky top-7 z-30 shadow-xs">
         {/* Service Line: Inpatient, STAT, OPD, Discharge, Cleanroom */}
         <div className="px-6 py-2.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-3">
@@ -464,9 +582,51 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
           </div>
         </div>
 
+        {/* Organizational Context & Multi-Location Bar */}
+        <div className="bg-slate-800 text-slate-200 px-6 py-1.5 border-b border-slate-700 flex flex-wrap items-center justify-between text-[11px] gap-2">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 font-medium">
+              <Building2 className="w-3.5 h-3.5 text-teal-400" />
+              <strong className="text-white">{orgContext.hospitalName}</strong> ({orgContext.branchName})
+            </span>
+            <span className="text-slate-500">•</span>
+            <span>القسم: <strong className="text-teal-300">{orgContext.departmentName}</strong></span>
+            <span className="text-slate-500">•</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">موقع الصيدلية النشط:</span>
+              <select
+                value={orgContext.activePharmacyLocationId}
+                onChange={e => {
+                  const loc = orgContext.availableLocations.find(l => l.id === e.target.value);
+                  if (loc) {
+                    setOrgContext(prev => ({
+                      ...prev,
+                      activePharmacyLocationId: loc.id,
+                      activePharmacyLocationName: loc.name
+                    }));
+                  }
+                }}
+                className="bg-slate-900 text-teal-300 border border-slate-600 rounded px-2 py-0.5 text-[11px] font-bold outline-none cursor-pointer"
+              >
+                {orgContext.availableLocations.map(loc => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span>الممارس المعتمد: <strong className="text-white">{orgContext.currentStaffName}</strong> ({orgContext.currentStaffRole})</span>
+            <span className="text-slate-500">•</span>
+            <span className="font-mono text-teal-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{orgContext.actingAssignment}</span>
+          </div>
+        </div>
+
         {/* Tab Navigation Row */}
         <div className="px-6 py-2 flex items-center justify-between border-t border-slate-100 bg-white">
-          <nav className="flex items-center gap-2 overflow-x-auto text-xs font-bold">
+          <nav className="flex items-center gap-1.5 overflow-x-auto text-xs font-bold">
             <button
               onClick={() => setActiveTab('home')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -501,6 +661,18 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>الاستيضاحات والتدخلات ({interventions.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('emergency_exceptions')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'emergency_exceptions'
+                  ? 'bg-rose-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-rose-500 group-hover:text-rose-600" />
+              <span>استثناءات الطوارئ ({emergencyExceptions.filter(e => e.retrospectiveStatus === 'pending_retrospective_review').length})</span>
             </button>
 
             <button
@@ -548,9 +720,42 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
               }`}
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>المرتجع والاستثناءات ({returns.length + cancelledPreps.length})</span>
+              <span>المرتجع والإتلاف ({returns.length + cancelledPreps.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('receiving')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'receiving'
+                  ? 'bg-teal-700 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>استلام وتفتيش المخزون ({receivingRecords.filter(r => r.inspectionStatus === 'pending_inspection').length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('recalls')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'recalls'
+                  ? 'bg-rose-700 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+              <span>استدعاء وسحب الأدوية ({recalls.filter(r => r.recallStatus !== 'closed_reconciled').length})</span>
             </button>
           </nav>
+
+          <button
+            onClick={() => setIsCatalogModalOpen(true)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-300 hover:border-teal-500 text-slate-700 hover:text-teal-800 bg-white flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
+            title="دليل المفاهيم والمصطلحات والـ Tall-Man"
+          >
+            <FileCheck className="w-3.5 h-3.5 text-teal-600" />
+            <span className="hidden md:inline">قاموس المفاهيم & Tall-Man</span>
+          </button>
         </div>
       </header>
 
@@ -629,6 +834,33 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
             orders={orders}
             onProcessReturn={handleProcessReturn}
             onUpdateDisposition={handleUpdateDisposition}
+          />
+        )}
+
+        {activeTab === 'emergency_exceptions' && (
+          <EmergencyExceptionsView
+            exceptions={emergencyExceptions}
+            onApproveReview={handleApproveRetrospectiveReview}
+            onRequestClarification={handleRequestClarificationException}
+            onOpenPatientChart={patientId => {
+              if (onOpenPatientWorkspace) {
+                onOpenPatientWorkspace(patientId, { initialActivity: 'medications', initialTab: 'mar_grid' });
+              }
+            }}
+          />
+        )}
+
+        {activeTab === 'receiving' && (
+          <InventoryReceivingView
+            records={receivingRecords}
+            onUpdateInspectionStatus={handleUpdateInspectionStatus}
+          />
+        )}
+
+        {activeTab === 'recalls' && (
+          <MedicationRecallView
+            recalls={recalls}
+            onQuarantineLocation={handleQuarantineLocation}
           />
         )}
       </main>
@@ -713,6 +945,11 @@ export const PharmacyOpsShell: React.FC<PharmacyOpsShellProps> = ({
         isOpen={isScenariosModalOpen}
         onClose={() => setIsScenariosModalOpen(false)}
         onSelectScenario={handleSelectScenario}
+      />
+
+      <MedicationCatalogReferenceModal
+        isOpen={isCatalogModalOpen}
+        onClose={() => setIsCatalogModalOpen(false)}
       />
     </div>
   );

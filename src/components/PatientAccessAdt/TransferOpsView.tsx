@@ -669,10 +669,10 @@ export const TransferOpsView: React.FC<TransferOpsViewProps> = ({
               <div>
                 <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                   <RotateCcw className="w-5 h-5 text-amber-600" />
-                  تصحيح حركة نقل مكتملة سُجلت بالخطأ (Erroneous Movement Correction)
+                  تصحيح حركة نقل مكتملة سُجلت بالخطأ (Movement Correction Provenance)
                 </h3>
                 <p className="text-xs text-amber-800 mt-0.5">
-                  معايير IHE PAM للتعامل مع الإدخال الخاطئ لحركة المريض (Entered in Error).
+                  توثيق خطأ الإدخال في السجل التشغيلي (Entered in Error) مع حفظ أصل الحركة السابقة والتمييز بين التوثيق والموقع الفيزيائي.
                 </p>
               </div>
               <button
@@ -690,7 +690,7 @@ export const TransferOpsView: React.FC<TransferOpsViewProps> = ({
                   {correctingTransfer.patientNameAr} ({correctingTransfer.mrn})
                 </div>
                 <div className="text-[11px] font-mono">
-                  تم تسجيله منقولاً إلى: {correctingTransfer.destinationUnit} ({correctingTransfer.destinationBed})
+                  سُجل منقولاً إلى: {correctingTransfer.destinationUnit} ({correctingTransfer.destinationBed})
                 </div>
               </div>
 
@@ -704,25 +704,32 @@ export const TransferOpsView: React.FC<TransferOpsViewProps> = ({
                 />
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <label className="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <span className="font-bold text-slate-800 block text-xs">
+                  التحقق من الموقع الفيزيائي الفعلي للمريض (Physical Location Distinction):
+                </span>
+                <label className="flex items-start gap-2 font-bold text-slate-800 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={revertBedAllocation}
                     onChange={e => setRevertBedAllocation(e.target.checked)}
-                    className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 mt-0.5"
                   />
-                  <span>إعادة تسجيل موقع المريض في الزيارة إلى السرير الأصلي ({correctingTransfer.sourceUnit} - {correctingTransfer.sourceBed})</span>
+                  <span>
+                    تم التأكيد السريري الميداني: المريض لم يغادر سريره الأصلي قط ({correctingTransfer.sourceUnit} - {correctingTransfer.sourceBed})
+                  </span>
                 </label>
-                <p className="text-[11px] text-slate-500 mt-1 mr-5">
-                  سيتم تحديث سجل الحركة وتصحيح تخصيص الأسرة في لوحة إدارة السعة التنويمية.
+                <p className="text-[11px] text-slate-500 mr-5 leading-relaxed">
+                  {revertBedAllocation
+                    ? 'سيتم إلغاء تخصيص سرير الوجهة واسترجاع شغل السرير الأصلي بناءً على التحقق السريري الميداني.'
+                    : 'في حال عدم تحديد هذا الخيار، سيتم تصحيح السجل التشغيلي فقط مع الإبقاء على الموقع المعروف وطلب مطابقة سريرية ميدانية (Location Reconciliation Required) دون افتراض انتقال فيزيائي تلقائي.'}
                 </p>
               </div>
 
               <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 text-rose-900 text-[11px] space-y-1">
-                <strong>حوكمة السجلات الطبية (HIM Audit Invariant):</strong>
-                <p>• لا يتم حذف سجل الحركة القديم، بل يتم وسمه كـ (Entered in Error) مع ربط حدث التصحيح.</p>
-                <p>• يوثق اسم الموظف والتوقيت الدقيق لضمان الامتثال لمتطلبات التدقيق السريري.</p>
+                <strong>حوكمة السجل التشغيلي وحفظ الأثر (Mock Provenance):</strong>
+                <p>• لا يتم مسح سجل الحركة الأصلي، بل يوسم كـ (Entered in Error) مع حفظ المبرر وهوية القائم بالتصحيح.</p>
+                <p>• التصحيح التوثيقي مستقل عن الحركة الفيزيائية للجسد ولا يمثل محرك IHE/HL7 فيزيائي تلقائي.</p>
               </div>
             </div>
 

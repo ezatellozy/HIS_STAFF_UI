@@ -34,7 +34,11 @@ export type PharmacyViewTab =
   | 'ready_handoff'
   | 'outpatient_queue'
   | 'discharge_supply'
-  | 'returns_exceptions';
+  | 'returns_exceptions'
+  | 'emergency_exceptions'
+  | 'receiving'
+  | 'recalls'
+  | 'catalog_reference';
 
 // ----------------------------------------------------------------------------
 // 1. ORDER & VERIFICATION STATUS
@@ -105,7 +109,8 @@ export type AlertCategory =
   | 'antimicrobial_stewardship'
   | 'route_form_mismatch'
   | 'geriatric_beers_criteria'
-  | 'monitoring_required';
+  | 'monitoring_required'
+  | 'lasa_soundalike';
 
 export interface ClinicalReviewAlert {
   id: string;
@@ -178,6 +183,22 @@ export interface MedicationOrderContext {
   verifiedBy?: string;
   verifiedAt?: string;
   verificationNote?: string;
+
+  // Order Version & Source-Change Provenance
+  sourceOrderVersion?: string;       // e.g., "v2.1"
+  reviewedOrderVersion?: string;     // e.g., "v1.0"
+  verificationReference?: string;    // e.g., "VRF-2026-9041"
+  reverificationRequired?: boolean;
+  historicalVerifications?: Array<{
+    version: string;
+    verifiedBy: string;
+    verifiedAt: string;
+    note?: string;
+  }>;
+
+  // ISMP / FDA Tall-Man Lettering Support
+  isTallMan?: boolean;
+  tallManName?: string;
 
   // Formulary & Stock
   formularyStatus: FormularyStatus;
@@ -429,4 +450,128 @@ export interface PharmacyFilterState {
   delayedOnly: boolean;
   preparationTypeFilter: 'all' | PreparationType;
   selectedOrderId?: string;
+}
+
+// ----------------------------------------------------------------------------
+// 13. EMERGENCY EXCEPTION / OVERRIDE RECORD (P03)
+// ----------------------------------------------------------------------------
+export interface EmergencyExceptionRecord {
+  id: string;
+  exceptionReference: string;
+  patientId: string;
+  patientName: string;
+  mrn: string;
+  encounterId: string;
+  wardLocation: string;
+  medicationCode: string;
+  brandName: string;
+  genericName: string;
+  dose: string;
+  route: string;
+  emergencyReason: string;
+  overrideType: 'adc_override_emergency' | 'resuscitation_code_kit' | 'verbal_stat_order';
+  initiatingActor: string;
+  initiatedAt: string;
+  retrospectiveStatus: 'pending_retrospective_review' | 'retrospectively_approved' | 'clarification_required' | 'variance_documented';
+  retrospectiveReviewer?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  accessSupplyLogged: boolean;
+  administrationLoggedStatus: 'documented_in_emar' | 'not_inferred_from_override';
+  varianceReportFiled?: boolean;
+}
+
+// ----------------------------------------------------------------------------
+// 14. PHARMACY INVENTORY RECEIVING (P14)
+// ----------------------------------------------------------------------------
+export interface PharmacyReceivingRecord {
+  id: string;
+  receiptReference: string;
+  poReference: string;
+  supplierName: string;
+  medicationProduct: {
+    brandName: string;
+    genericName: string;
+    strength: string;
+    dosageForm: string;
+    isTallMan?: boolean;
+    tallManName?: string;
+  };
+  quantityReceived: number;
+  packageUnit: string;
+  lotNumber: string;
+  expiryDate: string;
+  storageCondition: string;
+  receivingLocation: string;
+  receivedAt: string;
+  receivingActor: string;
+  inspectionStatus: 'received' | 'pending_inspection' | 'accepted' | 'quarantined' | 'rejected';
+  acceptedQuantity: number;
+  quarantinedQuantity: number;
+  rejectedQuantity: number;
+  inspectionNotes: string;
+  dispositionAction: string;
+  stockQuantities: {
+    physical: number;
+    availableForDispense: number;
+    reserved: number;
+    quarantined: number;
+    expired: number;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// 15. MEDICATION RECALL WORKFLOW (P16)
+// ----------------------------------------------------------------------------
+export interface MedicationRecallRecord {
+  id: string;
+  recallReference: string;
+  // Non-FDA & FDA regulatory profile representation
+  regulatoryAuthority: string;             // e.g., "Saudi SFDA", "US FDA", "EMA"
+  countryProfile: string;                  // e.g., "Saudi Arabia (SFDA)", "USA (FDA)"
+  sourceClassification: string;            // e.g., "Class 1 (Life Threat)", "Class I", "Class II", "Not Yet Classified"
+  classificationStatus: 'determined' | 'not_yet_classified' | 'under_evaluation';
+  originalClassificationCode: string;      // e.g., "SFDA-DEF-L1", "FDA-CLASS-I"
+  localOperationalPriority: 'critical_emergency' | 'high_priority' | 'routine';
+  recallClass?: 'Class I (High Risk)' | 'Class II (Moderate)' | 'Class III (Minor)' | string;
+  affectedMedication: string;
+  affectedBrand: string;
+  lotNumber: string;
+  manufacturer: string;
+  recallReason: string;
+  recallStatus: 'active_quarantine_in_progress' | 'quarantine_complete' | 'closed_reconciled';
+  notificationDate: string;
+  actionOwner: string;
+  affectedLocations: Array<{
+    locationName: string;
+    locationType: 'pharmacy_stock' | 'ward_stock' | 'adc_stock' | 'in_transit_stock';
+    initialStockCount: number;
+    quarantinedCount: number;
+    quarantineStatus: 'completed' | 'pending_quarantine' | 'unresolved';
+  }>;
+  outstandingLocationsCount: number;
+  traceabilityStatus: string;
+}
+
+// ----------------------------------------------------------------------------
+// 16. ORGANIZATIONAL CONTEXT (P26 & P27)
+// ----------------------------------------------------------------------------
+export interface PharmacyOrgContext {
+  hospitalName: string;
+  branchName: string;
+  activeBranchId?: string;
+  departmentName: string;
+  activeDepartmentId?: string;
+  activePharmacyLocation: string;
+  activePharmacyLocationId?: string;
+  activePharmacyLocationName?: string;
+  availableLocations?: Array<{ id: string; name: string; type: string }>;
+  availableBranches?: Array<{ id: string; name: string; isMainBranch: boolean }>;
+  availableDepartments?: Array<{ id: string; name: string }>;
+  currentStaffName?: string;
+  currentStaffRole?: string;
+  staffName: string;
+  staffRole: PharmacyRolePersona;
+  actingAssignment: string;
+  isSimulatedData: boolean;
 }

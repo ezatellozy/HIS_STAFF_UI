@@ -8,7 +8,11 @@ import {
   DischargeMedicationSupply,
   MedicationReturnContext,
   CancelledAfterPreparationContext,
-  PharmacyOperationalMetrics
+  PharmacyOperationalMetrics,
+  EmergencyExceptionRecord,
+  PharmacyReceivingRecord,
+  MedicationRecallRecord,
+  PharmacyOrgContext
 } from '../types/pharmacyOps';
 
 // ============================================================================
@@ -707,6 +711,172 @@ export const INITIAL_PHARMACY_ORDERS: MedicationOrderContext[] = [
     isDelayed: false,
 
     alerts: []
+  },
+
+  // 10. Scenario P10: ISMP Tall-Man Lettering LASA Pair (predniSONE vs prednisoLONE)
+  {
+    id: 'RX-2026-9050',
+    axis6OrderId: 'ORD-MED-9050',
+    patientId: 'p10',
+    patientName: 'منيرة عبد العزيز الدوسري',
+    patientNameEn: 'Munira Abdulaziz Al-Dosari',
+    mrn: 'MRN-88430',
+    encounterId: 'ENC-2026-113',
+    encounterType: 'inpatient',
+    locationWardBed: 'جناح الروماتيزم والمناعة 4B - سرير 09',
+    patientAge: 48,
+    patientGender: 'female',
+    patientWeightKg: 62,
+    patientAllergies: ['NKDA'],
+    patientPrimaryDiagnosis: 'هجمة حادة للذئبة الحمامية الجهازية (SLE Flare)',
+    patientRenalStatus: 'طبيعي',
+    patientHepaticStatus: 'طبيعي',
+
+    medicationCode: 'MED-PREDNISONE-20',
+    brandName: 'دلتازون (Deltasone)',
+    genericName: 'predniSONE',
+    isTallMan: true,
+    tallManName: 'predniSONE',
+    dosageForm: 'أقراص فموية (Oral Tablets)',
+    strength: '20 mg',
+    orderedDose: '20 mg',
+    doseUnit: 'mg',
+    route: 'فموي Oral مع وجبة الإفطار',
+    frequency: 'مرة واحدة يومياً (Once Daily)',
+    scheduleDetails: '08:00 صباحاً',
+    durationDays: 14,
+    totalQuantityOrdered: 14,
+    quantityUnit: 'Tablets',
+
+    isPrn: false,
+    clinicalIndication: 'تثبيط مناعي لعلاج هجمة الذئبة الحمامية الحادة',
+    prescriberName: 'د. حصة الرشيدي',
+    prescriberRole: 'استشارية الأمراض الروماتيزمية والمناعة',
+    prescriberDepartment: 'قسم الباطنة التخصصية',
+    prescribedAt: 'منذ 20 دقيقة',
+    priority: 'routine',
+    isHighAlert: false,
+    isAntimicrobial: false,
+    isControlledRestricted: false,
+
+    sourceOrderVersion: 'v1.0',
+    orderStatus: 'under_verification',
+    verificationStatus: 'pending',
+
+    formularyStatus: 'formulary',
+    stockContext: {
+      availability: 'available',
+      availableQuantity: 180,
+      packageUnit: 'Tablets',
+      defaultLocation: 'صيدلية التنويم المركزية - رف الكورتيزون C3',
+      batchLot: 'PRD-2026-02',
+      expiryDate: '09/2027'
+    },
+
+    targetCompletionMinutes: 60,
+    elapsedMinutes: 20,
+    isDelayed: false,
+
+    alerts: [
+      {
+        id: 'ALT-9050-1',
+        category: 'lasa_soundalike',
+        severity: 'warning',
+        titleAr: 'تنبيه دواء شبيه اللفظ والرسم (ISMP Tall-Man: predniSONE)',
+        titleEn: 'ISMP Tall-Man LASA Warning: predniSONE vs prednisoLONE',
+        detailAr: 'المستحضر المطلوب هو predniSONE (أقراص فموية)؛ تأكد من عدم الخلط مع prednisoLONE (شراب أو أقراص نشطة كبدياً).',
+        detailEn: 'Dispensing predniSONE. Confirm not confused with prednisoLONE. Apply Tall-Man typography on packaging label.',
+        isBlockingPolicy: false
+      }
+    ]
+  },
+
+  // 11. Scenario P02 / P10: High-Alert Inotropic with ISMP Tall-Man (DOBUTamine vs DOPamine)
+  {
+    id: 'RX-2026-9051',
+    axis6OrderId: 'ORD-MED-9051',
+    patientId: 'p11',
+    patientName: 'فهد إبراهيم السالم',
+    patientNameEn: 'Fahad Ibrahim Al-Salem',
+    mrn: 'MRN-88431',
+    encounterId: 'ENC-2026-114',
+    encounterType: 'inpatient',
+    locationWardBed: 'العناية القلبية المركزة CCU - سرير 05',
+    patientAge: 71,
+    patientGender: 'male',
+    patientWeightKg: 76,
+    patientAllergies: ['NKDA'],
+    patientPrimaryDiagnosis: 'صدمة قلبية وقصور حاد في البطين الأيسر (Cardiogenic Shock)',
+    patientRenalStatus: 'eGFR 45 mL/min',
+    patientHepaticStatus: 'طبيعي',
+
+    medicationCode: 'MED-DOBUTAMINE-250',
+    brandName: 'دوبوتريكس (Dobutrex)',
+    genericName: 'DOBUTamine HCl',
+    isTallMan: true,
+    tallManName: 'DOBUTamine',
+    dosageForm: 'محلول تسريب وريدي مركز (IV Infusion Solution)',
+    strength: '250 mg / 20 mL',
+    orderedDose: '5 mcg/kg/min (معايرة حسب استجابة الضغط والتروية)',
+    doseUnit: 'mcg/kg/min',
+    route: 'تسريب وريدي مستمر عبر قسطرة وريدية مركزية',
+    frequency: 'تسريب مستمر مستهدف ضغط شرياني > 65 mmHg',
+    scheduleDetails: '24 ساعة تسريب عبر مضخة ضخ ذكية',
+    durationDays: 2,
+    totalQuantityOrdered: 2,
+    quantityUnit: 'Infusion Bags (250mg in 250mL D5W)',
+
+    isPrn: false,
+    clinicalIndication: 'دعم انقباض القلب في الصدمة القلبية',
+    prescriberName: 'د. هشام طلعت',
+    prescriberRole: 'استشاري أمراض القلب والعناية الحرجة',
+    prescriberDepartment: 'مركز القلب CCU',
+    prescribedAt: 'منذ 10 دقائق',
+    priority: 'stat',
+    isHighAlert: true,
+    isAntimicrobial: false,
+    isControlledRestricted: false,
+
+    sourceOrderVersion: 'v1.0',
+    orderStatus: 'under_verification',
+    verificationStatus: 'pending',
+
+    formularyStatus: 'formulary',
+    stockContext: {
+      availability: 'available',
+      availableQuantity: 24,
+      packageUnit: 'Vials',
+      defaultLocation: 'صيدلية العناية المركزة - ثلاجة الأدوية الإسعافية R2',
+      batchLot: 'DOB-2026-19',
+      expiryDate: '05/2027'
+    },
+
+    targetCompletionMinutes: 15,
+    elapsedMinutes: 10,
+    isDelayed: false,
+
+    alerts: [
+      {
+        id: 'ALT-9051-1',
+        category: 'lasa_soundalike',
+        severity: 'high_attention',
+        titleAr: 'تنبيه دواء عالي الخطورة وشبيه اللفظ (ISMP Tall-Man: DOBUTamine)',
+        titleEn: 'High-Alert LASA Warning: DOBUTamine vs DOPamine',
+        detailAr: 'تحذير عالي الخطورة: DOBUTamine مقوٍ لعضلة القلب وموسع وعائي، بينما DOPamine مقبض وعائي بجرعاته العالية. الخطأ في التبديل قد يسبب انهيار الدورة الدموية. يتطلب تدقيقاً مزدوجاً مستقلاً.',
+        detailEn: 'Critical inotrope/vasopressor LASA pair. Independent double check required before compounding and release to CCU.',
+        isBlockingPolicy: true
+      },
+      {
+        id: 'ALT-9051-2',
+        category: 'high_alert_medication',
+        severity: 'high_attention',
+        titleAr: 'سياسة التدقيق المستقل المزدوج (Independent Double Check)',
+        titleEn: 'Independent Double Verification Required',
+        detailAr: 'يتطلب مراجعة مستقلة للحسابات والتركيز والوزن ومعدل الضخ قبل الاعتماد.',
+        detailEn: 'Mandatory independent secondary verification.',
+        isBlockingPolicy: true
+      }
+    ]
   }
 ];
 
@@ -991,4 +1161,516 @@ export const INITIAL_PHARMACY_METRICS: PharmacyOperationalMetrics = {
   sterileIvCompoundingCount: 2,
   returnsPendingInspectionCount: 2,
   recentDispensedTodayCount: 48
+};
+
+// ============================================================================
+// ISMP / FDA TALL-MAN LETTERING CATALOG REFERENCE
+// Look-Alike / Sound-Alike (LASA) Drug Pairs
+// ============================================================================
+export interface LasaDrugPair {
+  id: string;
+  pairName: string;
+  drugA: { name: string; tallMan: string; indication: string; route: string };
+  drugB: { name: string; tallMan: string; indication: string; route: string };
+  ismpRiskCategory: string;
+  mitigationStrategy: string;
+}
+
+export const ISMP_TALLMAN_CATALOG_PAIRS: LasaDrugPair[] = [
+  {
+    id: 'LASA-01',
+    pairName: 'predniSONE vs prednisoLONE',
+    drugA: {
+      name: 'Prednisone',
+      tallMan: 'predniSONE',
+      indication: 'كورتيكوستيرويد فموي (يتطلب تحول كبدي إلى بريدنيزولون)',
+      route: 'فموي Oral'
+    },
+    drugB: {
+      name: 'Prednisolone',
+      tallMan: 'prednisoLONE',
+      indication: 'كورتيكوستيرويد نشط مباشرة (مفضل في الاعتلال الكبدي والأطفال)',
+      route: 'فموي / شراب Oral liquid'
+    },
+    ismpRiskCategory: 'كورتيكوستيرويد جهازي — اختلاف في التكافؤ الحيوي والشكل الصيدلاني',
+    mitigationStrategy: 'تطبيق أحرف Tall-Man في شاشات الصرف، والتمييز اللوني على الرفوف والتنبيه التلقائي عند الاختيار.'
+  },
+  {
+    id: 'LASA-02',
+    pairName: 'DOPamine vs DOBUTamine',
+    drugA: {
+      name: 'Dopamine',
+      tallMan: 'DOPamine',
+      indication: 'رافع ضغط ومقبض وعائي (Inotropic & Vasopressor)',
+      route: 'تسريب وريدي مركزي مستمر'
+    },
+    drugB: {
+      name: 'Dobutamine',
+      tallMan: 'DOBUTamine',
+      indication: 'مقوٍ لعضلة القلب وموسع وعائي محيطي (Inotropic & Vasodilator)',
+      route: 'تسريب وريدي مستمر'
+    },
+    ismpRiskCategory: 'أدوية العناية المركزة عالية الخطورة — خطأ التبديل قد يؤدي إلى هبوط حاد في الضغط أو اضطراب نظم قلبي مميت',
+    mitigationStrategy: 'أحرف Tall-Man إلزامية على ملصقات أكياس التسريب وتدقيق مستقل مزدوج قبل تحرير الدواء.'
+  },
+  {
+    id: 'LASA-03',
+    pairName: 'hydrOXYzine vs hydrALAzine',
+    drugA: {
+      name: 'Hydroxyzine',
+      tallMan: 'hydrOXYzine',
+      indication: 'مضاد هيستامين ومهدئ للقلق والحكة',
+      route: 'فموي Oral'
+    },
+    drugB: {
+      name: 'Hydralazine',
+      tallMan: 'hydrALAzine',
+      indication: 'خافض لضغط الدم موسع للشرايين',
+      route: 'فموي / حقن وريدي IV'
+    },
+    ismpRiskCategory: 'فئات علاجية متباعدة — تبديلهما يسبب انخفاضاً حاداً في ضغط الدم أو فرط التسكين',
+    mitigationStrategy: 'فصل مواضع التخزين في الصيدلية وخزائن الأجنحة وتأكيد التشخيص السريري المرافق.'
+  },
+  {
+    id: 'LASA-04',
+    pairName: 'EPINEPHrine vs ePHEDrine',
+    drugA: {
+      name: 'Epinephrine',
+      tallMan: 'EPINEPHrine',
+      indication: 'إنعاش قلبي رئوي وحساسية مفرطة (Anaphylaxis)',
+      route: 'حقن عضلي / تسريب وريدي'
+    },
+    drugB: {
+      name: 'Ephedrine',
+      tallMan: 'ePHEDrine',
+      indication: 'هبوط الضغط المصاحب للتخدير النصفي',
+      route: 'حقن وريدي بطيء IV'
+    },
+    ismpRiskCategory: 'أدوية طوارئ وتخدير — فارق الفاعلية 10 أضعاف بين العقارين',
+    mitigationStrategy: 'فصل أدراج الطوارئ وتلوين الأمبولات واستخدام Tall-Man على شاشة الصرف والملصق.'
+  },
+  {
+    id: 'LASA-05',
+    pairName: 'vinBLAStine vs vinCRIStine',
+    drugA: {
+      name: 'Vinblastine',
+      tallMan: 'vinBLAStine',
+      indication: 'علاج كيميائي لأورام الغدد اللمفاوية (سمية نقي العظام)',
+      route: 'تسريب وريدي بطيء فقط'
+    },
+    drugB: {
+      name: 'Vincristine',
+      tallMan: 'vinCRIStine',
+      indication: 'علاج كيميائي لابيضاض الدم (سمية عصبية محيطية حادة)',
+      route: 'تسريب وريدي بطيء فقط — قاتل لو أعطي داخل القناة الشوكية'
+    },
+    ismpRiskCategory: 'علاج كيميائي عالي الخطورة — الخطأ في الجرعة أو المسار مميت',
+    mitigationStrategy: 'التسليم في أكياس صغيرة حصراً مع تحذير بارز، وحظر الحقن في القناة الشوكية نهائياً.'
+  }
+];
+
+// ============================================================================
+// MOCK EMERGENCY EXCEPTIONS / OVERRIDE WORKLIST (P03)
+// ADC Overrides & Retrospective Pharmacist Review
+// ============================================================================
+export const INITIAL_EMERGENCY_EXCEPTIONS: EmergencyExceptionRecord[] = [
+  {
+    id: 'EMG-2026-001',
+    exceptionReference: 'EMG-OVR-901',
+    patientId: 'p3',
+    patientName: 'محمد سالم الدوسري',
+    mrn: 'MRN-88423',
+    encounterId: 'ENC-2026-106',
+    wardLocation: 'العناية القلبية المركزة CCU - سرير 02',
+    medicationCode: 'MED-EPI-1MG',
+    brandName: 'أدرينالين (Adrenaline)',
+    genericName: 'EPINEPHrine 1 mg/mL Ampoule',
+    dose: '1 mg IV STAT',
+    route: 'حقن وريدي سريع IV Push',
+    emergencyReason: 'توقف القلب المفاجئ (Cardiac Arrest - Asystole) أثناء مناورة إنعاش CCU',
+    overrideType: 'adc_override_emergency',
+    initiatingActor: 'د. طارق المنشاوي (طبيب العناية المركزة) + ممرض CCU: أنس الحربي',
+    initiatedAt: 'منذ 45 دقيقة',
+    retrospectiveStatus: 'pending_retrospective_review',
+    accessSupplyLogged: true,
+    administrationLoggedStatus: 'documented_in_emar',
+    reviewNotes: 'تم سحب الدواء من خزانة التوزيع الآلي ADC بحالة تجاوز طارئ (Override Mode). مطلوب المراجعة الصيدلانية اللاحقة لمطابقة بروتوكول ACLS وسجل التمريض.'
+  },
+  {
+    id: 'EMG-2026-002',
+    exceptionReference: 'EMG-OVR-902',
+    patientId: 'p7',
+    patientName: 'ياسر فهد المطيري',
+    mrn: 'MRN-88427',
+    encounterId: 'ENC-2026-110',
+    wardLocation: 'طوارئ الحوادث - سرير الملاحظة 07',
+    medicationCode: 'MED-NALOX-0.4',
+    brandName: 'ناركان (Narcan)',
+    genericName: 'Naloxone HCl 0.4 mg/mL',
+    dose: '0.4 mg IV STAT',
+    route: 'حقن وريدي IV Push',
+    emergencyReason: 'هبوط تنفسي حاد واشتباه سمية أفيونية في غرفة الإنعاش',
+    overrideType: 'resuscitation_code_kit',
+    initiatingActor: 'د. طلال السديري (أخصائي الطوارئ)',
+    initiatedAt: 'منذ ساعتين',
+    retrospectiveStatus: 'retrospectively_approved',
+    retrospectiveReviewer: 'د. ليلى عبد الحميد (صيدلي إكلينيكي)',
+    reviewedAt: 'منذ 30 دقيقة',
+    reviewNotes: 'تمت المراجعة الصيدلانية اللاحقة؛ الجرعة والداعي الإسعافي مطابقان تماماً لسياسة الإنعاش، وتأكد توثيق الإعطاء في eMAR للمريض.',
+    accessSupplyLogged: true,
+    administrationLoggedStatus: 'documented_in_emar'
+  },
+  {
+    id: 'EMG-2026-003',
+    exceptionReference: 'EMG-OVR-903',
+    patientId: 'p2',
+    patientName: 'عبد الله بن فيصل الزهراني',
+    mrn: 'MRN-88422',
+    encounterId: 'ENC-2026-105',
+    wardLocation: 'جناح الجراحة 2B - سرير 04',
+    medicationCode: 'MED-ATROP-0.5',
+    brandName: 'أتروبين (Atropine Sulfate)',
+    genericName: 'Atropine Sulfate 0.5 mg/mL Ampoule',
+    dose: '0.5 mg IV STAT',
+    route: 'حقن وريدي سريع IV',
+    emergencyReason: 'تباطؤ قلبي حاد مع هبوط ضغط (Symptomatic Bradycardia HR 32 bpm)',
+    overrideType: 'adc_override_emergency',
+    initiatingActor: 'د. فهد المريسي (مقيم جراحة)',
+    initiatedAt: 'منذ 3 ساعات',
+    retrospectiveStatus: 'clarification_required',
+    retrospectiveReviewer: 'د. سامي الجوهر (صيدلي أول)',
+    reviewedAt: 'منذ ساعة',
+    reviewNotes: 'تم سحب أمبولتين ولكن التوثيق في سجل التمريض يشير إلى إعطاء أمبولة واحدة فقط (0.5 مجم). يتطلب التحقق من إتلاف أو إعادة الأمبولة المتبقية وتوثيق التباين.',
+    accessSupplyLogged: true,
+    administrationLoggedStatus: 'documented_in_emar',
+    varianceReportFiled: true
+  }
+];
+
+// ============================================================================
+// MOCK PHARMACY RECEIVING & STOCK CONTEXT (P14)
+// Minimum Pharmacy-Facing Receiving Workflow
+// ============================================================================
+export const INITIAL_RECEIVING_RECORDS: PharmacyReceivingRecord[] = [
+  {
+    id: 'RCV-2026-081',
+    receiptReference: 'RCV-PO-9921',
+    poReference: 'PO-NUPCO-2026-778',
+    supplierName: 'الشركة الوطنية للشراء الموحد (نوبكو NUPCO) - مستودع الرياض المركزي',
+    medicationProduct: {
+      brandName: 'تافانيك (Tavanic)',
+      genericName: 'Levofloxacin 750mg/150mL Infusion Bag',
+      strength: '750 mg / 150 mL',
+      dosageForm: 'أكياس تسريب وريدي معقمة',
+      isTallMan: false
+    },
+    quantityReceived: 500,
+    packageUnit: 'Infusion Bags',
+    lotNumber: 'LT-LV-2026-88',
+    expiryDate: '2028-08-31',
+    storageCondition: 'درجة حرارة الغرفة الخاضعة للمراقبة (15-25°م) محمي من الضوء',
+    receivingLocation: 'رصيف استلام الصيدلية المركزية - منطقة التفتيش الأولي',
+    receivedAt: 'اليوم 08:30 ص',
+    receivingActor: 'فني صيدلة: ريان المالكي',
+    inspectionStatus: 'accepted',
+    acceptedQuantity: 500,
+    quarantinedQuantity: 0,
+    rejectedQuantity: 0,
+    inspectionNotes: 'الحاويات الخارجية سليمة، أجهزة مراقبة الحرارة (TempTale) تؤكد عدم تجاوز حدود درجات الحرارة أثناء النقل، مطابقة لشهادة التحليل COA.',
+    dispositionAction: 'نقل للمخزون الفعال - صيدلية التنويم المركزية رف D2',
+    stockQuantities: {
+      physical: 500,
+      availableForDispense: 450,
+      reserved: 50,
+      quarantined: 0,
+      expired: 0
+    }
+  },
+  {
+    id: 'RCV-2026-082',
+    receiptReference: 'RCV-PO-9922',
+    poReference: 'PO-LOC-2026-114',
+    supplierName: 'سبيماكو الدوائية (SPIMACO Addwaeih) - الموزع المحلي المباشر',
+    medicationProduct: {
+      brandName: 'فانكوسين (Vancocin)',
+      genericName: 'Vancomycin HCl 1g Lyophilized Vial',
+      strength: '1 g / Vial',
+      dosageForm: 'فيالات مجففة للحقن الوريدي',
+      isTallMan: false
+    },
+    quantityReceived: 300,
+    packageUnit: 'Vials',
+    lotNumber: 'LT-VN-2026-04',
+    expiryDate: '2027-11-30',
+    storageCondition: 'ثلاجة الصيدلية (2-8°م)',
+    receivingLocation: 'منطقة استلام الأدوية المبردة (Cold Chain Dock)',
+    receivedAt: 'اليوم 10:15 ص',
+    receivingActor: 'فني صيدلة: ماجد الشريف',
+    inspectionStatus: 'pending_inspection',
+    acceptedQuantity: 0,
+    quarantinedQuantity: 300,
+    rejectedQuantity: 0,
+    inspectionNotes: 'تم الاستلام الفيزيائي؛ بانتظار استكمال قراءة مسجل الحرارة الإلكتروني المرفق بالشحنة للتأكد من استمرارية سلسلة التبريد قبل القبول.',
+    dispositionAction: 'حجر مؤقت في ثلاجة الحجر والاستلام (Quarantine Cold Room) - غير متاح للصرف',
+    stockQuantities: {
+      physical: 300,
+      availableForDispense: 0,
+      reserved: 0,
+      quarantined: 300,
+      expired: 0
+    }
+  },
+  {
+    id: 'RCV-2026-083',
+    receiptReference: 'RCV-PO-9923',
+    poReference: 'PO-IMP-2026-552',
+    supplierName: 'الوكيل الإقليمي للأدوية التخصصية - شحنة عاجلة',
+    medicationProduct: {
+      brandName: 'دوبوتامين (Dobutrex)',
+      genericName: 'DOBUTamine 250mg/20mL Vial',
+      strength: '250 mg / 20 mL',
+      dosageForm: 'أمبولات حقن وريدي مركزة',
+      isTallMan: true,
+      tallManName: 'DOBUTamine'
+    },
+    quantityReceived: 100,
+    packageUnit: 'Vials',
+    lotNumber: 'LT-DOB-2026-91',
+    expiryDate: '2026-05-31',
+    storageCondition: 'حرارة الغرفة (15-25°م)',
+    receivingLocation: 'صيدلية العناية المركزة - منطقة استلام الطوارئ',
+    receivedAt: 'أمس 16:40',
+    receivingActor: 'د. سامي الجوهر',
+    inspectionStatus: 'quarantined',
+    acceptedQuantity: 80,
+    quarantinedQuantity: 20,
+    rejectedQuantity: 0,
+    inspectionNotes: 'صندوق واحد (20 فيال) تعرض لتهتك كرتوني أثناء الشحن الخارجي؛ تم قبول 80 فيال سليمة وحجر 20 فيال لفحص العبوة الداخلية والكسور الشعرية.',
+    dispositionAction: 'حجر للتقييم الفني الداخلي والتواصل مع المورد لاستبدال الوحدات المتضررة',
+    stockQuantities: {
+      physical: 100,
+      availableForDispense: 80,
+      reserved: 0,
+      quarantined: 20,
+      expired: 0
+    }
+  },
+  {
+    id: 'RCV-2026-084',
+    receiptReference: 'RCV-PO-9924',
+    poReference: 'PO-COLD-2026-301',
+    supplierName: 'مستودع المصل واللقاحات الوطني - سلسلة التبريد المباشرة',
+    medicationProduct: {
+      brandName: 'إنسولين غلارجين (Lantus)',
+      genericName: 'Insulin Glargine 100 Units/mL SoloStar',
+      strength: '100 Units / mL (3 mL)',
+      dosageForm: 'أقلام حقن مسبقة التعبئة',
+      isTallMan: false
+    },
+    quantityReceived: 200,
+    packageUnit: 'Packs (5 Pens)',
+    lotNumber: 'LT-INS-2026-11',
+    expiryDate: '2027-09-30',
+    storageCondition: 'سلسلة تبريد مشددة (2-8°م) مستمرة دون انقطاع',
+    receivingLocation: 'رصيف استلام الأدوية المبردة والحيوية (Cold Chain Gate)',
+    receivedAt: 'اليوم 11:45 ص',
+    receivingActor: 'فني صيدلة: ماجد الشريف',
+    inspectionStatus: 'quarantined',
+    acceptedQuantity: 0,
+    quarantinedQuantity: 200,
+    rejectedQuantity: 0,
+    inspectionNotes: 'تنبيه اختراق سلسلة التبريد: مسجل الحرارة الرقمي (Data Logger) كشف عن ارتفاع درجة الحرارة إلى +14.8°م لمدة 3 ساعات أثناء النقل. محجور بالكامل للتحقق الفني ويمنع إتاحته للصرف.',
+    dispositionAction: 'حجر فني إلزامي في غرفة التبريد التحفظية - تواصل فوري مع المورد لتقرير الإتلاف أو التعويض',
+    stockQuantities: {
+      physical: 200,
+      availableForDispense: 0,
+      reserved: 0,
+      quarantined: 200,
+      expired: 0
+    }
+  }
+];
+
+// ============================================================================
+// MOCK MEDICATION RECALL WORKFLOW (P16)
+// Multi-Jurisdiction: SFDA & FDA Profiles, Location-Level Quarantine & Traceability
+// ============================================================================
+export const INITIAL_MEDICATION_RECALLS: MedicationRecallRecord[] = [
+  {
+    id: 'RCL-2026-014',
+    recallReference: 'SFDA-RCL-2026-014 (Defect Class 1)',
+    regulatoryAuthority: 'الهيئة العامة للغذاء والدواء (Saudi SFDA)',
+    countryProfile: 'المملكة العربية السعودية (SFDA Profile)',
+    sourceClassification: 'Class 1 (Urgent Defect - Life Threatening)',
+    classificationStatus: 'determined',
+    originalClassificationCode: 'SFDA-DEF-L1',
+    localOperationalPriority: 'critical_emergency',
+    recallClass: 'Class I (High Risk)',
+    affectedMedication: 'Heparin Sodium Injection (5,000 Units/mL, 5 mL Vial)',
+    affectedBrand: 'هيبارين الصوديوم (Heparin Sodium)',
+    lotNumber: 'LT-HEP-412',
+    manufacturer: 'الشركة المصنعة للأدوية البيولوجية العالمية',
+    recallReason: 'إشعار عاجل من الهيئة العامة للغذاء والدواء SFDA: اشتباه وجود شوائب جسيمية مجهرية (Subvisible Particulate Matter) في التشغيلة المحددة قد تسبب انسداداً وعائياً.',
+    recallStatus: 'active_quarantine_in_progress',
+    notificationDate: '2026-09-18 14:00',
+    actionOwner: 'د. ليلى عبد الحميد (مسؤولة سلامة الدواء وإدارة السحب)',
+    affectedLocations: [
+      {
+        locationName: 'صيدلية التنويم المركزية (Central Inpatient)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 45,
+        quarantinedCount: 45,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'صيدلية العناية المركزة (ICU Satellite)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 20,
+        quarantinedCount: 20,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'جناح الباطنة 4A - عهدة الجناح (Ward Stock)',
+        locationType: 'ward_stock',
+        initialStockCount: 10,
+        quarantinedCount: 10,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'خزانة التوزيع الآلي ADC - قسم الطوارئ (Emergency ADC Unit)',
+        locationType: 'adc_stock',
+        initialStockCount: 8,
+        quarantinedCount: 8,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'صيدلية العمليات الجراحية (OR Satellite - Surgical Pharmacy)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 15,
+        quarantinedCount: 0,
+        quarantineStatus: 'unresolved'
+      },
+      {
+        locationName: 'شحنة توريد داخلية قيد النقل (Internal Transit to Satellite)',
+        locationType: 'in_transit_stock',
+        initialStockCount: 5,
+        quarantinedCount: 0,
+        quarantineStatus: 'pending_quarantine'
+      }
+    ],
+    outstandingLocationsCount: 2,
+    traceabilityStatus: 'بيانات التعرض الخاصة بالمرضى الفرديين: غير متوفرة / تتطلب ربط نظام التتبع الدوائي وسجل الإعطاء الإلكتروني (Traceability integration required)'
+  },
+  {
+    id: 'RCL-2026-015',
+    recallReference: 'SFDA-RCL-2026-009 (Defect Class 2)',
+    regulatoryAuthority: 'الهيئة العامة للغذاء والدواء (Saudi SFDA)',
+    countryProfile: 'المملكة العربية السعودية (SFDA Profile)',
+    sourceClassification: 'Class 2 (Moderate Defect)',
+    classificationStatus: 'determined',
+    originalClassificationCode: 'SFDA-DEF-L2',
+    localOperationalPriority: 'high_priority',
+    recallClass: 'Class II (Moderate)',
+    affectedMedication: 'Ceftriaxone Sodium 1g Vial for Injection',
+    affectedBrand: 'روسيفين (Rocephin)',
+    lotNumber: 'LT-ROC-993',
+    manufacturer: 'روش فارماسيوتيكالز',
+    recallReason: 'خلل في طباعة ملصق الكرتون الخارجي لا يؤثر على مأمونية المادة الفعالة أو العقامة.',
+    recallStatus: 'quarantine_complete',
+    notificationDate: '2026-09-10 09:00',
+    actionOwner: 'د. سامي الجوهر (مدير التموين الدوائي)',
+    affectedLocations: [
+      {
+        locationName: 'صيدلية الطوارئ المركزية (Emergency Pharmacy)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 120,
+        quarantinedCount: 120,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'مستودع الأدوية الرئيسي (Central Warehouse)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 600,
+        quarantinedCount: 600,
+        quarantineStatus: 'completed'
+      }
+    ],
+    outstandingLocationsCount: 0,
+    traceabilityStatus: 'تم حجر كامل المخزون الفيزيائي بنجاح؛ لا توجد حالات تعرض حادة تتطلب استدعاء سريرياً.'
+  },
+  {
+    id: 'RCL-2026-016',
+    recallReference: 'FDA-RCL-2026-908 (Enforcement Report Profile)',
+    regulatoryAuthority: 'US Food and Drug Administration (FDA)',
+    countryProfile: 'United States (FDA Profile)',
+    sourceClassification: 'Not Yet Classified',
+    classificationStatus: 'not_yet_classified',
+    originalClassificationCode: 'FDA-NYC-2026-PENDING',
+    localOperationalPriority: 'high_priority',
+    recallClass: 'Class II (Moderate)',
+    affectedMedication: 'Methotrexate 2.5mg Oral Tablets (Lot: MTX-2026-09)',
+    affectedBrand: 'تريكسان (Trexan)',
+    lotNumber: 'LT-MTX-2026-09',
+    manufacturer: 'Pfizer Inc. / Global Injectables',
+    recallReason: 'إشعار سحب صادر عن US FDA: قيد التقييم المخبري للشوائب المحتملة (Pending Classification). الأولوية التشغيلية تظل مرتفعة احترازياً لحين صدور التقرير النهائي ولا تعتبر منخفضة المخاطر.',
+    recallStatus: 'active_quarantine_in_progress',
+    notificationDate: '2026-09-19 07:30',
+    actionOwner: 'د. ليلى عبد الحميد (صيدلي إكلينيكي)',
+    affectedLocations: [
+      {
+        locationName: 'صيدلية العيادات الخارجية (Ambulatory Pharmacy)',
+        locationType: 'pharmacy_stock',
+        initialStockCount: 80,
+        quarantinedCount: 80,
+        quarantineStatus: 'completed'
+      },
+      {
+        locationName: 'جناح الروماتيزم والمناعة 2C - عهدة الجناح',
+        locationType: 'ward_stock',
+        initialStockCount: 25,
+        quarantinedCount: 0,
+        quarantineStatus: 'unresolved'
+      }
+    ],
+    outstandingLocationsCount: 1,
+    traceabilityStatus: 'حالة تقييم التعرض: التصنيف قيد التقييم من الهيئة الأمريكية (Not Yet Classified)؛ جرى حجر الصيدلية احترازياً مع إبقاء الأولوية التشغيلية مرتفعة.'
+  }
+];
+
+// ============================================================================
+// MOCK PHARMACY ORGANIZATIONAL CONTEXT (P26 & P27)
+// Multi-branch, multi-department, multi-role switching (Simulated Context)
+// ============================================================================
+export const INITIAL_PHARMACY_ORG_CONTEXT: PharmacyOrgContext = {
+  hospitalName: 'مستشفى الملك فهد التخصصي (KFSH)',
+  branchName: 'الفرع الرئيسي - المدينة الطبية بالرياض',
+  departmentName: 'إدارة الخدمات الصيدلانية والرعاية الصيدلية',
+  activePharmacyLocation: 'صيدلية التنويم المركزية (Central Inpatient Pharmacy)',
+  activePharmacyLocationId: 'loc-central-inpatient',
+  activePharmacyLocationName: 'صيدلية التنويم المركزية (Central Inpatient Pharmacy)',
+  availableLocations: [
+    { id: 'loc-central-inpatient', name: 'صيدلية التنويم المركزية', type: 'Central Inpatient' },
+    { id: 'loc-icu-satellite', name: 'صيدلية العناية المركزة CCU/ICU', type: 'ICU Satellite' },
+    { id: 'loc-cleanroom', name: 'وحدة التحضير المعقم الوريدي IV Cleanroom', type: 'IV Admixture Hood' },
+    { id: 'loc-opd-pharmacy', name: 'صيدلية العيادات الخارجية', type: 'Outpatient Clinic' },
+    { id: 'loc-emergency', name: 'صيدلية الطوارئ والاستقبال الإسعافي', type: 'Emergency' }
+  ],
+  availableBranches: [
+    { id: 'br-main', name: 'الفرع الرئيسي - المدينة الطبية بالرياض', isMainBranch: true },
+    { id: 'br-west', name: 'فرع غرب الرياض التخصصي', isMainBranch: false },
+    { id: 'br-jeddah', name: 'فرع مدينة الملك عبد الله الطبية - جدة', isMainBranch: false }
+  ],
+  availableDepartments: [
+    { id: 'dept-inpatient', name: 'إدارة الخدمات الصيدلانية والرعاية الصيدلية' },
+    { id: 'dept-ambulatory', name: 'صيدليات الرعاية التخصصية والعيادات الخارجية' },
+    { id: 'dept-sterile', name: 'شعبة التحضير المعقم والتغذية الوريدية TPN' }
+  ],
+  activeBranchId: 'br-main',
+  activeDepartmentId: 'dept-inpatient',
+  currentStaffName: 'د. ليلى عبد الحميد',
+  currentStaffRole: 'صيدلي إكلينيكي (Clinical Pharmacist)',
+  staffName: 'د. ليلى عبد الحميد',
+  staffRole: 'clinical_pharmacist',
+  actingAssignment: 'صيدلي إكلينيكي مناوب - تغطية أجنحة الباطنة والجراحة والعنايات',
+  isSimulatedData: true
 };

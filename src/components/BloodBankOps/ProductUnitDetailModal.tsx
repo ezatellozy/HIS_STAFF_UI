@@ -89,18 +89,88 @@ export const ProductUnitDetailModal: React.FC<ProductUnitDetailModalProps> = ({
               <span className="font-bold text-teal-700 text-xs mt-1 block uppercase">{unit.status}</span>
             </div>
             <div className="p-3 rounded-xl bg-white border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">مكان الحفظ:</span>
-              <span className="font-bold text-slate-800 text-xs mt-1 block">{unit.storageLocation}</span>
+              <span className="text-[10px] text-slate-500 block">الفرع والمنشأة (GAP-08):</span>
+              <span className="font-bold text-slate-800 text-xs mt-1 block">
+                {unit.branchNameAr ||
+                  (unit.branchId === 'trauma_center_east'
+                    ? 'مركز الإصابات (شرق)'
+                    : unit.branchId === 'satellite_clinic_north'
+                    ? 'جراحة اليوم الواحد'
+                    : 'المستشفى المركزي')}
+              </span>
             </div>
             <div className="p-3 rounded-xl bg-white border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">درجة الحرارة المراقبة:</span>
-              <span className="font-bold font-mono text-slate-800 text-xs mt-1 block">{unit.storageTemperatureC}</span>
+              <span className="text-[10px] text-slate-500 block">مكان الحفظ والحرارة:</span>
+              <span className="font-bold text-slate-800 text-xs mt-1 block">
+                {unit.storageLocation} ({unit.storageTemperatureC})
+              </span>
             </div>
             <div className="p-3 rounded-xl bg-white border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">تاريخ انتهاء الصلاحية:</span>
-              <span className="font-bold font-mono text-red-700 text-xs mt-1 block">{unit.expiryDate}</span>
+              <span className="text-[10px] text-slate-500 block">تاريخ الصلاحية الفعلي:</span>
+              <span className="font-bold font-mono text-red-700 text-xs mt-1 block">
+                {unit.expiryDate || 'غير محدد (معزول)'}
+              </span>
             </div>
           </div>
+
+          {/* Expiry Traceability: Original vs Verified Post-Modification */}
+          {unit.originalExpiryDate && (
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
+              <span className="font-bold text-slate-900 block flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-slate-600" />
+                <span>توثيق وتتبع الصلاحية المرجعية (Expiry Verification & Audit Trail):</span>
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                <div className="p-2 rounded-lg bg-white border border-slate-200 font-mono">
+                  <span className="text-slate-500 block text-[10px] font-sans">الصلاحية الأصلية من المورد/التبرع:</span>
+                  <span className="font-bold text-slate-800">{unit.originalExpiryDate}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 font-mono">
+                  <span className="text-blue-700 block text-[10px] font-sans">الصلاحية الموثقة بعد المعالجة والتحوير:</span>
+                  <span className="font-bold text-blue-900">{unit.postProcessingVerifiedExpiry || unit.expiryDate}</span>
+                </div>
+              </div>
+              {unit.modificationExpiryDetails && (
+                <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-900">
+                  <strong>المرجع الإرشادي المعتمد:</strong> {unit.modificationExpiryDetails.regulatorySource} • الحالة: {unit.modificationExpiryDetails.specificConditionAr}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Hierarchy & Lineage (Parent / Child / Pool Traceability) */}
+          {(unit.parentUnitId || unit.poolIdentifier || unit.childUnitIds?.length || unit.contributingUnitIds?.length) && (
+            <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-2 text-xs">
+              <span className="font-bold text-purple-950 block flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-purple-700" />
+                <span>العلاقات الهرمية وتتبع المشتقات (Parent / Child / Pool Traceability):</span>
+              </span>
+              {unit.parentUnitId && (
+                <div className="p-2 rounded-lg bg-white border border-purple-200 text-[11px] flex justify-between">
+                  <span className="text-slate-600">الوحدة الأم المقتطع منها (Parent DIN):</span>
+                  <span className="font-mono font-bold text-purple-900">{unit.parentUnitId}</span>
+                </div>
+              )}
+              {unit.poolIdentifier && (
+                <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] flex justify-between">
+                  <span className="text-slate-600">معرف الدمج المعتمد (Pool ID):</span>
+                  <span className="font-mono font-bold text-indigo-900">{unit.poolIdentifier}</span>
+                </div>
+              )}
+              {unit.contributingUnitIds && unit.contributingUnitIds.length > 0 && (
+                <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] space-y-1">
+                  <span className="text-slate-600 block">الوحدات المساهمة في الدمج ({unit.contributingUnitIds.length} وحدات):</span>
+                  <div className="flex flex-wrap gap-1 font-mono text-[10px]">
+                    {unit.contributingUnitIds.map(cid => (
+                      <span key={cid} className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200">
+                        {cid}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Preparation & Attributes */}
           <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200 space-y-2">

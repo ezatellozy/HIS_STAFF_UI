@@ -41,6 +41,8 @@ export const SpecimenCollectionModal: React.FC<SpecimenCollectionModalProps> = (
   const [unableReason, setUnableReason] = useState('');
   const [showUnableForm, setShowUnableForm] = useState(false);
 
+  const isBarcodeMismatch = scannedBarcode.trim() !== '' && scannedBarcode.trim() !== specimen.specimenBarcode;
+
   if (!isOpen) return null;
 
   const handleSimulateBarcodeScan = () => {
@@ -49,7 +51,7 @@ export const SpecimenCollectionModal: React.FC<SpecimenCollectionModalProps> = (
   };
 
   const handleExecuteCollect = () => {
-    if (!patientConfirmed) return;
+    if (!patientConfirmed || isBarcodeMismatch) return;
     const updated: LabSpecimen = {
       ...specimen,
       status: 'collected',
@@ -172,10 +174,20 @@ export const SpecimenCollectionModal: React.FC<SpecimenCollectionModalProps> = (
                 <CheckCircle2 className="w-4 h-4" />
                 <span>مطابق وموثق</span>
               </span>
+            ) : isBarcodeMismatch ? (
+              <span className="flex items-center gap-1 text-red-700 text-xs font-bold px-2.5 py-1 rounded-lg bg-red-50 border border-red-200">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <span>خطأ: الباركود لا يطابق هذه العينة! الحفظ محظور</span>
+              </span>
             ) : (
               <span className="text-slate-400 text-xs px-2">بانتظار المسح</span>
             )}
           </div>
+          {isBarcodeMismatch && (
+            <p className="text-[11px] text-red-700 bg-red-50/80 p-2 rounded-lg border border-red-200 font-bold">
+              تنبيه سلامة سريرية (Wrong-Specimen Safety Block): الباركود المدخل يختلف عن الباركود المحدد لطلب العينة. تم تفعيل الحظر الصارم لمنع سحب أو توثيق عينة خاطئة.
+            </p>
+          )}
         </div>
 
         {/* Specimen Container & Collection Parameters */}
@@ -278,7 +290,7 @@ export const SpecimenCollectionModal: React.FC<SpecimenCollectionModalProps> = (
           <button
             type="button"
             onClick={handleExecuteCollect}
-            disabled={!patientConfirmed}
+            disabled={!patientConfirmed || isBarcodeMismatch}
             className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <CheckCircle2 className="w-4 h-4" />

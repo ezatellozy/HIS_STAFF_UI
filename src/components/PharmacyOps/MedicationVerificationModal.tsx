@@ -143,21 +143,58 @@ export const MedicationVerificationModal: React.FC<MedicationVerificationModalPr
                   <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
                   <span>ملف الحساسية الموثقة:</span>
                 </div>
-                <p>{order.patientAllergies.join('، ') || 'لا توجد حساسية مسجلة'}</p>
+                <p>{order.patientAllergies.length > 0 ? order.patientAllergies.join('، ') : 'لا توجد حساسية مسجلة'}</p>
               </div>
 
               <div className="p-2.5 rounded-lg bg-white border border-slate-200">
                 <div className="font-bold text-slate-800 mb-1">وظائف الكلى والكبد (Lab Profile):</div>
-                <div className="text-slate-600">الكلى: <strong>{order.patientRenalStatus || 'طبيعي'}</strong></div>
-                <div className="text-slate-600">الكبد: <strong>{order.patientHepaticStatus || 'طبيعي'}</strong></div>
+                <div className="text-slate-600">
+                  الكلى: {order.patientRenalStatus ? (
+                    <strong>{order.patientRenalStatus}</strong>
+                  ) : (
+                    <span className="text-amber-700 font-bold">غير مسجل (غير متوفر)</span>
+                  )}
+                </div>
+                <div className="text-slate-600">
+                  الكبد: {order.patientHepaticStatus ? (
+                    <strong>{order.patientHepaticStatus}</strong>
+                  ) : (
+                    <span className="text-amber-700 font-bold">غير مسجل (غير متوفر)</span>
+                  )}
+                </div>
               </div>
 
               <div className="p-2.5 rounded-lg bg-white border border-slate-200">
                 <div className="font-bold text-slate-800 mb-1">التشخيص السريري الرئيسي:</div>
-                <p className="text-slate-600 line-clamp-2">{order.patientPrimaryDiagnosis}</p>
+                <p className="text-slate-600 line-clamp-2">{order.patientPrimaryDiagnosis || 'غير مسجل'}</p>
               </div>
             </div>
           </div>
+
+          {/* Section 1.5: Order Versioning & Re-verification Check */}
+          {(order.isSourceChanged || order.reverificationRequired) && (
+            <div className="bg-rose-50 border border-rose-300 rounded-xl p-3.5 text-rose-950 flex items-start gap-3 animate-pulse">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-rose-900">
+                    تنبيه حرج: تعديل طلب المصدر — الإصدار المعتمد سابقاً غير سارٍ (Outdated Verification / Re-verification Required)
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded bg-rose-200 font-mono text-[10px] text-rose-900 font-bold">
+                    Source: {order.sourceOrderVersion || 'v2.0'} vs Reviewed: {order.reviewedOrderVersion || 'v1.0'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-rose-800 leading-relaxed">
+                  تم تعديل أو إلغاء هذا الطلب من قبل الطبيب المعالج بعد تدقيقه أو تحضيره سابقاً. لا يجوز صرف المستحضر بالاعتماد القديم.
+                </p>
+                {order.sourceChangeReason && (
+                  <div className="text-[10px] bg-white/80 p-1.5 rounded border border-rose-200 font-mono text-rose-900">
+                    <strong>سبب التعديل بالمصدر:</strong> {order.sourceChangeReason}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Section 2: Medication Order Specifications */}
           <div className="border border-slate-200 rounded-xl p-4 space-y-3">
@@ -166,22 +203,35 @@ export const MedicationVerificationModal: React.FC<MedicationVerificationModalPr
                 <Pill className="w-4 h-4 text-teal-600" />
                 <span>تفاصيل المستحضر المطلوب من الطبيب (Axis 6 Source Order)</span>
               </h4>
-              <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase font-mono ${
-                order.priority === 'stat'
-                  ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                  : order.priority === 'urgent'
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-slate-100 text-slate-700'
-              }`}>
-                {order.priority}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                  إصدار الطلب: {order.sourceOrderVersion || 'v1.0'}
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase font-mono ${
+                  order.priority === 'stat'
+                    ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                    : order.priority === 'urgent'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-slate-100 text-slate-700'
+                }`}>
+                  {order.priority}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
               <div>
                 <span className="text-slate-500 block text-[10px]">الاسم التجاري والعلمي:</span>
                 <span className="font-bold text-slate-900 text-xs">{order.brandName}</span>
-                <span className="block text-[10px] text-slate-500 font-mono">{order.genericName}</span>
+                <div className="mt-0.5">
+                  {order.isTallMan ? (
+                    <span className="font-mono text-xs font-bold text-teal-900 bg-amber-100 px-1 py-0.2 rounded border border-amber-300">
+                      {order.tallManName || order.genericName}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-600 font-mono">{order.genericName}</span>
+                  )}
+                </div>
               </div>
               <div>
                 <span className="text-slate-500 block text-[10px]">الجرعة والشكل:</span>

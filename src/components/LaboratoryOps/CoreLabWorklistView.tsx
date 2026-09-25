@@ -130,6 +130,9 @@ export const CoreLabWorklistView: React.FC<CoreLabWorklistViewProps> = ({
                 const hasCritical = criticalTests.length > 0;
                 const isCommAcknowledged =
                   acc.criticalCommunication?.acknowledgementStatus === 'acknowledged';
+                const hasMissingMandatory = acc.tests.some(
+                  t => t.status !== 'cancelled' && t.numericValue === undefined && !t.textValue
+                );
 
                 return (
                   <tr key={acc.id} className={`hover:bg-slate-50/80 transition-colors ${hasCritical && !isCommAcknowledged ? 'bg-red-50/40' : ''}`}>
@@ -140,8 +143,14 @@ export const CoreLabWorklistView: React.FC<CoreLabWorklistViewProps> = ({
                         <span>•</span>
                         <span className="font-bold text-teal-700">{acc.accessionNumber}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
-                        استلام: {acc.receivedDateTime}
+                      <div className="text-[10px] mt-0.5 font-mono">
+                        {acc.receivedDateTime ? (
+                          <span className="text-slate-500">استلام: {acc.receivedDateTime}</span>
+                        ) : (
+                          <span className="text-amber-800 font-bold bg-amber-50 px-1 py-0.5 rounded">
+                            وقت الاستلام: غير متاح (Unavailable)
+                          </span>
+                        )}
                       </div>
                     </td>
 
@@ -159,7 +168,13 @@ export const CoreLabWorklistView: React.FC<CoreLabWorklistViewProps> = ({
                       </span>
                       <div className="text-[11px] text-slate-600 flex items-center gap-1 font-mono">
                         <Clock className="w-3 h-3 text-slate-400" />
-                        <span>الهدف: {acc.tatTargetMinutes} دقيقة</span>
+                        {acc.tatTargetMinutes ? (
+                          <span>الهدف: {acc.tatTargetMinutes} دقيقة</span>
+                        ) : (
+                          <span className="text-amber-700 bg-amber-50 px-1 rounded text-[10px]">
+                            الهدف: غير محدد (TAT Unavailable)
+                          </span>
+                        )}
                       </div>
                     </td>
 
@@ -262,8 +277,17 @@ export const CoreLabWorklistView: React.FC<CoreLabWorklistViewProps> = ({
                         {acc.status !== 'released' && (
                           <button
                             onClick={() => onReleaseFinal(acc.id)}
-                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer"
-                            title="إطلاق واعتماد النتيجة النهائية (Release Final)"
+                            disabled={hasMissingMandatory}
+                            className={`p-1.5 rounded-lg border transition-all ${
+                              hasMissingMandatory
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 cursor-pointer'
+                            }`}
+                            title={
+                              hasMissingMandatory
+                                ? 'لا يمكن إطلاق النتيجة: يحتوي الترقيم على فحوصات غير مكتملة أو مفقودة'
+                                : 'إطلاق واعتماد النتيجة النهائية (Release Final)'
+                            }
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>

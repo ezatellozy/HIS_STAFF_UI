@@ -21,7 +21,7 @@ interface BloodRequestDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: BloodProductRequest | null;
-  allUnits: BloodProductUnit[];
+  allUnits?: BloodProductUnit[];
   onOpenSampleWorkspace?: (sampleId: string) => void;
   onOpenCompatibilityWorkspace?: (requestId: string) => void;
   onOpenAllocationModal?: (request: BloodProductRequest) => void;
@@ -33,7 +33,7 @@ export const BloodRequestDetailModal: React.FC<BloodRequestDetailModalProps> = (
   isOpen,
   onClose,
   request,
-  allUnits,
+  allUnits = [],
   onOpenSampleWorkspace,
   onOpenCompatibilityWorkspace,
   onOpenAllocationModal,
@@ -42,7 +42,7 @@ export const BloodRequestDetailModal: React.FC<BloodRequestDetailModalProps> = (
 }) => {
   if (!isOpen || !request) return null;
 
-  const allocatedUnits = allUnits.filter(u => request.allocatedUnitIds.includes(u.id));
+  const allocatedUnits = (allUnits || []).filter(u => (request.allocatedUnitIds || []).includes(u.id));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">

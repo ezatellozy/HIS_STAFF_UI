@@ -265,7 +265,7 @@ export const StandardsViewerModal: React.FC<StandardsViewerModalProps> = ({
                 </div>
 
                 <div className="pt-2 border-t border-blue-200 flex items-center justify-between text-[11px] text-blue-900">
-                  <span>الحد السنوي المتبقي للوثيقة: <strong>{nphiesElig.remainingBenefit.toLocaleString()} ريال / جنيه</strong></span>
+                  <span>الحد السنوي المتبقي للوثيقة: <strong>{(nphiesElig.remainingBenefit ?? 0).toLocaleString()} ريال / جنيه</strong></span>
                   <span className="text-amber-800 font-medium">يتطلب موافقة مسبقة (Pre-Auth) للإجراءات المتقدمة</span>
                 </div>
               </div>

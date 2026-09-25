@@ -18,7 +18,13 @@ import {
   BloodBankMetrics,
   MassiveTransfusionProtocolSession,
   BloodBankDemoScenario,
-  BloodBankOperationalMetrics
+  BloodBankOperationalMetrics,
+  BloodBankBranch,
+  ProductReturnPolicy,
+  UnitDestructionRecord,
+  LookbackInvestigationRecord,
+  RetrospectiveTestingRecord,
+  MtpProtocolProfile
 } from '../types/bloodBankOps';
 
 // ----------------------------------------------------------------------------
@@ -879,7 +885,10 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     volumeMl: 295,
     collectionDate: '2026-08-28',
     expiryDate: '2026-10-09',
+    originalExpiryDate: '2026-10-09',
     isNearExpiry: false,
+    branchId: 'trauma_center_east',
+    branchNameAr: 'مركز الإصابات والحوادث (شرق)',
     storageLocation: 'ثلاجة الطوارئ الفورية - الرف E1',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -901,7 +910,10 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     volumeMl: 305,
     collectionDate: '2026-08-28',
     expiryDate: '2026-10-09',
+    originalExpiryDate: '2026-10-09',
     isNearExpiry: false,
+    branchId: 'trauma_center_east',
+    branchNameAr: 'مركز الإصابات والحوادث (شرق)',
     storageLocation: 'ثلاجة الطوارئ الفورية - الرف E2',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -1053,8 +1065,13 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     bloodGroup: { abo: 'AB', rh: 'positive', displayAr: 'AB عام للبلازما', displayEn: 'AB Universal Plasma' },
     volumeMl: 250,
     collectionDate: '2026-07-10',
-    expiryDate: '2027-07-10',
+    expiryDate: '2026-09-21 10:40',
+    originalExpiryDate: '2027-07-10',
+    postProcessingVerifiedExpiry: '2026-09-21 10:40',
+    expiryVerificationStatus: 'verified',
     isNearExpiry: false,
+    branchId: 'trauma_center_east',
+    branchNameAr: 'مركز الإصابات والحوادث (شرق)',
     storageLocation: 'حمام إذابة البلازما / ثلاجة الصرف المؤقت',
     storageTemperatureC: '2°C - 6°C (بعد الإذابة)',
     specialAttributes: ['leukocyte_reduced'],
@@ -1062,7 +1079,11 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     allocatedToRequestId: 'BPR-2026-808',
     allocatedToPatientName: 'أحمد صالح الغامدي',
     allocatedToPatientMrn: 'MRN-88428',
-    preparationState: { isThawed: true, thawedAt: 'اليوم 10:40 ص', thawExpiry: 'صالحة لمدة 24 ساعة (10:40 ص غداً)' }
+    preparationState: {
+      isThawed: true,
+      thawedAt: 'اليوم 10:40 ص',
+      thawExpiry: 'بروتوكول النزف الحاد MTP - صلاحية محددة وفق سياسة الإذابة المؤسسية (2°C-6°C)'
+    }
   },
   {
     id: 'DIN-W2026-0972-FFP',
@@ -1073,8 +1094,13 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     bloodGroup: { abo: 'AB', rh: 'positive', displayAr: 'AB عام للبلازما', displayEn: 'AB Universal Plasma' },
     volumeMl: 245,
     collectionDate: '2026-07-12',
-    expiryDate: '2027-07-12',
+    expiryDate: '2026-09-21 10:40',
+    originalExpiryDate: '2027-07-12',
+    postProcessingVerifiedExpiry: '2026-09-21 10:40',
+    expiryVerificationStatus: 'verified',
     isNearExpiry: false,
+    branchId: 'trauma_center_east',
+    branchNameAr: 'مركز الإصابات والحوادث (شرق)',
     storageLocation: 'حمام إذابة البلازما / ثلاجة الصرف المؤقت',
     storageTemperatureC: '2°C - 6°C (بعد الإذابة)',
     specialAttributes: ['leukocyte_reduced'],
@@ -1082,7 +1108,11 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     allocatedToRequestId: 'BPR-2026-808',
     allocatedToPatientName: 'أحمد صالح الغامدي',
     allocatedToPatientMrn: 'MRN-88428',
-    preparationState: { isThawed: true, thawedAt: 'اليوم 10:40 ص', thawExpiry: 'صالحة لمدة 24 ساعة (10:40 ص غداً)' }
+    preparationState: {
+      isThawed: true,
+      thawedAt: 'اليوم 10:40 ص',
+      thawExpiry: 'بروتوكول النزف الحاد MTP - صلاحية محددة وفق سياسة الإذابة المؤسسية (2°C-6°C)'
+    }
   },
 
   // Additional Available Units in Blood Bank Inventory
@@ -1096,7 +1126,10 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     volumeMl: 300,
     collectionDate: '2026-08-15',
     expiryDate: '2026-09-26',
+    originalExpiryDate: '2026-09-26',
     isNearExpiry: false,
+    branchId: 'main_hospital',
+    branchNameAr: 'المستشفى الرئيسي المركزي',
     storageLocation: 'ثلاجة بنك الدم 2 - الرف A2',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -1112,7 +1145,10 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     volumeMl: 295,
     collectionDate: '2026-08-19',
     expiryDate: '2026-09-30',
+    originalExpiryDate: '2026-09-30',
     isNearExpiry: false,
+    branchId: 'main_hospital',
+    branchNameAr: 'المستشفى الرئيسي المركزي',
     storageLocation: 'ثلاجة بنك الدم 1 - الرف A3',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -1122,13 +1158,16 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     id: 'DIN-W2026-1003-RBC',
     unitNumber: '=W0422 26 11003 00',
     componentType: 'packed_red_blood_cells',
-    componentNameAr: 'كريات دم حمراء مكدسة',
+    componentNameAr: 'كريات دم حمراء مكدسة (جراحة اليوم الواحد)',
     componentNameEn: 'Packed Red Blood Cells',
     bloodGroup: { abo: 'B', rh: 'positive', displayAr: 'B موجب (+)', displayEn: 'B Positive' },
     volumeMl: 285,
     collectionDate: '2026-08-21',
     expiryDate: '2026-10-02',
+    originalExpiryDate: '2026-10-02',
     isNearExpiry: false,
+    branchId: 'satellite_clinic_north',
+    branchNameAr: 'مركز جراحة اليوم الواحد (شمال)',
     storageLocation: 'ثلاجة بنك الدم 2 - الرف B2',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -1138,13 +1177,16 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     id: 'DIN-W2026-1004-RBC',
     unitNumber: '=W0422 26 11004 00',
     componentType: 'packed_red_blood_cells',
-    componentNameAr: 'كريات دم حمراء مكدسة',
+    componentNameAr: 'كريات دم حمراء مكدسة (طوارئ الحوادث)',
     componentNameEn: 'Packed Red Blood Cells',
     bloodGroup: { abo: 'O', rh: 'negative', displayAr: 'O سالب (-)', displayEn: 'O Negative' },
     volumeMl: 310,
     collectionDate: '2026-08-25',
     expiryDate: '2026-10-06',
+    originalExpiryDate: '2026-10-06',
     isNearExpiry: false,
+    branchId: 'trauma_center_east',
+    branchNameAr: 'مركز الإصابات والحوادث (شرق)',
     storageLocation: 'ثلاجة الطوارئ 1 - الرف E3',
     storageTemperatureC: '2°C - 6°C',
     specialAttributes: ['leukocyte_reduced'],
@@ -1177,10 +1219,122 @@ export const INITIAL_PRODUCT_UNITS: BloodProductUnit[] = [
     collectionDate: '2026-09-13',
     expiryDate: '2026-09-18',
     isNearExpiry: true,
+    nearExpiryThresholdHours: 48,
+    expiryVerificationStatus: 'verified',
     storageLocation: 'حاضنة الصفائح مع الهزاز 1 - الرف 1',
     storageTemperatureC: '20°C - 24°C',
     specialAttributes: ['leukocyte_reduced'],
     status: 'available'
+  },
+  // Unit demonstrating Missing Expiry (Must NOT become a future date; quarantined)
+  {
+    id: 'DIN-W2026-1007-RBC',
+    unitNumber: '=W0422 26 11007 00',
+    componentType: 'packed_red_blood_cells',
+    componentNameAr: 'كريات دم حمراء (تاريخ الصلاحية غير محدد - معزولة)',
+    componentNameEn: 'PRBCs - Missing Expiry Date',
+    bloodGroup: { abo: 'O', rh: 'positive', displayAr: 'O موجب (+)', displayEn: 'O Positive' },
+    volumeMl: 280,
+    collectionDate: '2026-08-20',
+    expiryDate: '', // Deliberately missing from supplier record
+    expiryVerificationStatus: 'unverified_missing_date',
+    isNearExpiry: false,
+    storageLocation: 'ثلاجة الحجر والعزل B3',
+    storageTemperatureC: '2°C - 6°C',
+    specialAttributes: ['leukocyte_reduced'],
+    status: 'quarantined',
+    notes: 'تم حظر الوحدة وعزلها لعدم وضوح تاريخ الصلاحية على الملصق المورد؛ يتطلب التواصل مع بنك الدم المورد ومطابقة رقم التبرع.'
+  },
+  // Pooled Cryoprecipitate Unit demonstrating multi-contributor tracking (JPAC Section 7.5.4)
+  {
+    id: 'DIN-W2026-1008-POOL',
+    unitNumber: '=W0422 26 41008 00',
+    componentType: 'cryoprecipitate',
+    componentNameAr: 'راسب برودي مدمج (Pooled Cryoprecipitate - 5 Units)',
+    componentNameEn: 'Cryoprecipitate Pool (5 units)',
+    bloodGroup: { abo: 'AB', rh: 'positive', displayAr: 'AB عام للبلازما والراسب', displayEn: 'AB Universal' },
+    volumeMl: 175,
+    collectionDate: '2026-07-01',
+    expiryDate: '2027-07-01',
+    expiryVerificationStatus: 'verified',
+    isNearExpiry: false,
+    storageLocation: 'محطة تجهيز المشتقات / فريزر -40°C',
+    storageTemperatureC: '-30°C أو أقل (قبل الإذابة)',
+    specialAttributes: ['leukocyte_reduced', 'pooled'],
+    status: 'in_preparation',
+    poolIdentifier: 'POOL-CRYO-2026-081',
+    contributingUnitIds: ['DIN-CRYO-01', 'DIN-CRYO-02', 'DIN-CRYO-03', 'DIN-CRYO-04', 'DIN-CRYO-05'],
+    isEligibleForNextStep: false, // NOT automatically available
+    processingHistory: [
+      {
+        id: 'PROC-2026-401',
+        sourceUnitIds: ['DIN-CRYO-01', 'DIN-CRYO-02', 'DIN-CRYO-03', 'DIN-CRYO-04', 'DIN-CRYO-05'],
+        sourceProductIdentity: '5 وحدات راسب برودي فردية فصيلة AB',
+        processingMethod: 'cryo_pooling',
+        processingMethodAr: 'دمج الراسب البرودي (Cryo Pooling)',
+        status: 'quality_verification_pending',
+        requestedAt: 'اليوم 09:30 ص',
+        startedAt: 'اليوم 09:40 ص',
+        completedAt: 'اليوم 10:05 ص',
+        responsibleSimulatedActor: 'أخصائي مختبر بدر العتيبي',
+        deviceIdentifier: 'محطة الدمج المعقمة POOL-ST-01',
+        resultingProductIdentity: 'Cryoprecipitate Pooled (5 units)',
+        resultingVolumeMl: 175,
+        poolIdentifier: 'POOL-CRYO-2026-081',
+        contributingUnits: [
+          { unitId: 'DIN-CRYO-01', unitNumber: '=W0422 26 40001 00', bloodGroup: 'AB+', originalVolumeMl: 35 },
+          { unitId: 'DIN-CRYO-02', unitNumber: '=W0422 26 40002 00', bloodGroup: 'AB+', originalVolumeMl: 35 },
+          { unitId: 'DIN-CRYO-03', unitNumber: '=W0422 26 40003 00', bloodGroup: 'AB+', originalVolumeMl: 35 },
+          { unitId: 'DIN-CRYO-04', unitNumber: '=W0422 26 40004 00', bloodGroup: 'AB+', originalVolumeMl: 35 },
+          { unitId: 'DIN-CRYO-05', unitNumber: '=W0422 26 40005 00', bloodGroup: 'AB+', originalVolumeMl: 35 }
+        ],
+        expirySource: 'JPAC Red Book Section 7.5.4 v8 (Cryoprecipitate Pooled)',
+        expiryVerificationStatus: 'pending_verification',
+        notes: 'الدمج بنظام مغلق معقم. الصلاحية بعد الإذابة 4 ساعات عند 20-24°C فور اكتمال التحقق.',
+        isOptionalHospitalCapability: true
+      }
+    ]
+  },
+  // Pediatric Split Aliquot demonstrating parent-to-child tracking
+  {
+    id: 'DIN-W2026-1009-P1',
+    unitNumber: '=W0422 26 11009 01',
+    componentType: 'packed_red_blood_cells',
+    componentNameAr: 'حصة أطفال مجزأة (Pediatric RBC Aliquot 1 of 3)',
+    componentNameEn: 'Pediatric Split PRBCs Part 1',
+    bloodGroup: { abo: 'O', rh: 'negative', displayAr: 'O سالب (-)', displayEn: 'O Negative' },
+    volumeMl: 70,
+    collectionDate: '2026-09-05',
+    expiryDate: '2026-10-17',
+    expiryVerificationStatus: 'verified',
+    isNearExpiry: false,
+    storageLocation: 'ثلاجة دم الأطفال وحديثي الولادة - الرف P1',
+    storageTemperatureC: '2°C - 6°C',
+    specialAttributes: ['leukocyte_reduced', 'pediatric_split', 'cmv_negative'],
+    status: 'in_preparation',
+    parentUnitId: 'DIN-W2026-1009-RBC',
+    isEligibleForNextStep: false, // Must be verified before issue
+    processingHistory: [
+      {
+        id: 'PROC-2026-402',
+        sourceUnitIds: ['DIN-W2026-1009-RBC'],
+        sourceProductIdentity: 'وحدة كريات دم حمراء كاملة 290 mL O-',
+        processingMethod: 'pediatric_splitting',
+        processingMethodAr: 'تجزئة وحدات الأطفال المعقمة (Sterile Splitting)',
+        status: 'processing_recorded',
+        requestedAt: 'اليوم 08:00 ص',
+        startedAt: 'اليوم 08:15 ص',
+        completedAt: 'اليوم 08:35 ص',
+        responsibleSimulatedActor: 'أخصائية مختبر لمياء الدخيل',
+        deviceIdentifier: 'جهاز الربط المعقم TSCD-II (Sterile Tubing Welder)',
+        resultingProductIdentity: 'PRBC Pediatric Aliquot P1 (70 mL)',
+        resultingVolumeMl: 70,
+        expirySource: 'AABB Standards 35th Ed / JPAC Section 7.3.1 (Closed System Maintains Original Expiry)',
+        expiryVerificationStatus: 'pending_verification',
+        notes: 'تم الربط الأنبوبي المعقم بنجاح؛ تحافظ الحصص على تاريخ صلاحية الوحدة الأم طالما لم يُفتح النظام.',
+        isOptionalHospitalCapability: true
+      }
+    ]
   }
 ];
 
@@ -1679,4 +1833,243 @@ export const mockBloodBankScenarios: BloodBankDemoScenario[] = [
     targetSampleId: 'SMP-BT-9048',
     targetUnitId: 'DIN-W2026-0961-RBC'
   }
+];
+
+// ----------------------------------------------------------------------------
+// 12. MULTI-BRANCH INVENTORY DIRECTORY
+// ----------------------------------------------------------------------------
+export const MOCK_BRANCHES: BloodBankBranch[] = [
+  {
+    id: 'main_hospital',
+    nameAr: 'بنك الدم المركزي - المستشفى الرئيسي',
+    nameEn: 'Main Hospital Central Blood Bank Hub',
+    code: 'HUB-01',
+    isCentralHub: true
+  },
+  {
+    id: 'satellite_clinic_north',
+    nameAr: 'بنك دم فرعي - مجمع الشمال الجراحي',
+    nameEn: 'North Surgical Complex Satellite Depot',
+    code: 'SAT-N02',
+    isCentralHub: false
+  },
+  {
+    id: 'trauma_center_east',
+    nameAr: 'مستودع طوارئ الرضوح - مركز الشرق',
+    nameEn: 'East Trauma Emergency Depot',
+    code: 'DEP-E03',
+    isCentralHub: false
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 13. PRODUCT RETURN POLICIES
+// ----------------------------------------------------------------------------
+export const MOCK_PRODUCT_RETURN_POLICIES: ProductReturnPolicy[] = [
+  {
+    componentType: 'packed_red_blood_cells',
+    maxMinutesOutsideControlledStorage: 30,
+    acceptableTempRange: '1°C - 10°C (أثناء النقل)',
+    storageConditionRequired: 'ثلاجة دم معتمدة 2°C - 6°C',
+    policyReference: 'AABB 35th Ed. / Saudi MoH Blood Return SOP v3'
+  },
+  {
+    componentType: 'platelets_apheresis',
+    maxMinutesOutsideControlledStorage: 15,
+    acceptableTempRange: '20°C - 24°C مع التحريك المستمر',
+    storageConditionRequired: 'حاضنة صفائح مع رجاج ميكانيكي',
+    policyReference: 'ISBT Platelet Storage Standards'
+  },
+  {
+    componentType: 'fresh_frozen_plasma',
+    maxMinutesOutsideControlledStorage: 20,
+    acceptableTempRange: '2°C - 6°C بعد الإذابة الكاملة',
+    storageConditionRequired: 'صالحة لمدة 24 ساعة فقط بعد الإذابة',
+    policyReference: 'WHO Clinical Transfusion Guidelines'
+  },
+  {
+    componentType: 'cryoprecipitate',
+    maxMinutesOutsideControlledStorage: 15,
+    acceptableTempRange: '20°C - 24°C فور التجميع والإذابة',
+    storageConditionRequired: 'صالحة لمدة 4 إلى 6 ساعات فقط',
+    policyReference: 'AABB Technical Manual Ch. 15'
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 14. MTP PROTOCOL PROFILES
+// ----------------------------------------------------------------------------
+export const MOCK_MTP_PROTOCOL_PROFILES: MtpProtocolProfile[] = [
+  {
+    id: 'adult_trauma_balanced',
+    nameAr: 'بروتوكول رضوح البالغين المتوازن (1:1:1 Balanced Trauma)',
+    nameEn: 'Adult Trauma Balanced Protocol',
+    packRatioDescription: '4 كريات دم حمراء (PRBC) : 4 بلازما مجمدة (FFP) : 1 صفائح دموية فصادة (Platelet)',
+    prbcPackRatio: 4,
+    ffpPackRatio: 4,
+    pltPackRatio: 1,
+    cryoRequirement: 'إضافة 10 وحدات Cryo تلقائياً بدءاً من الحزمة رقم 3 إذا كان الفيبرينوجين < 1.5 g/L'
+  },
+  {
+    id: 'obstetric_hemorrhage',
+    nameAr: 'بروتوكول النزيف التوليدي الحاد (Postpartum Hemorrhage - PPH)',
+    nameEn: 'Major Obstetric Hemorrhage Protocol',
+    packRatioDescription: '4 كريات دم حمراء O-Salb/A-Salb + 4 بلازما طازجة + إضافة فورية للراسب البرودي (Cryo)',
+    prbcPackRatio: 4,
+    ffpPackRatio: 4,
+    pltPackRatio: 1,
+    cryoRequirement: 'إعطاء مبكر لـ 10-20 وحدة كرايو لتعويض الفيبرينوجين بسرعة فائقة'
+  },
+  {
+    id: 'pediatric_massive',
+    nameAr: 'بروتوكول النقل الهائل للأطفال (Pediatric Massive Transfusion)',
+    nameEn: 'Pediatric Massive Transfusion Protocol',
+    packRatioDescription: 'وحدات مفلترة ومشععة بحجم 10-20 mL/kg متناسبة طردياً مع وزن الطفل',
+    prbcPackRatio: 2,
+    ffpPackRatio: 2,
+    pltPackRatio: 1,
+    cryoRequirement: '5-10 mL/kg كرايو حسب مؤشرات التخثر'
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 15. RETROSPECTIVE TESTING QUEUE (GAP-02)
+// ----------------------------------------------------------------------------
+export const MOCK_RETROSPECTIVE_TESTING_QUEUE: RetrospectiveTestingRecord[] = [
+  {
+    id: 'RETRO-2026-001',
+    emergencyReleaseId: 'EMG-REL-803',
+    requestId: 'BPR-2026-803',
+    patientId: 'p3',
+    patientMrn: 'MRN-99103',
+    patientName: 'مجهول الهوية #12 (مصاب حادث سيارة)',
+    releasedUnitIds: ['DIN-W2026-0945-RBC', 'DIN-W2026-0946-RBC'],
+    status: 'pending',
+    startedAt: 'اليوم 10:25 ص',
+    technologistName: 'أخصائية مختبر لمياء الدخيل',
+    urgentAlertBroadcasted: false
+  },
+  {
+    id: 'RETRO-2026-002',
+    emergencyReleaseId: 'EMG-REL-808',
+    requestId: 'BPR-2026-808',
+    patientId: 'p8',
+    patientMrn: 'MRN-88428',
+    patientName: 'أحمد صالح الغامدي (MTP)',
+    releasedUnitIds: ['DIN-W2026-0961-RBC', 'DIN-W2026-0962-RBC'],
+    status: 'pending',
+    startedAt: 'اليوم 10:48 ص',
+    technologistName: 'أخصائي مختبر بدر العتيبي',
+    urgentAlertBroadcasted: false
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 16. LOOKBACK & RECALL INVESTIGATIONS (GAP-07)
+// ----------------------------------------------------------------------------
+export const MOCK_LOOKBACK_INVESTIGATIONS: LookbackInvestigationRecord[] = [
+  {
+    id: 'LK-2026-001',
+    donationId: 'W0422 25 881920',
+    triggerSource: 'regional_blood_center_notification',
+    triggerDate: '2026-09-18',
+    donorTestFinding: 'تأكيد إيجابية HCV-RNA في تبرع لاحق للمتبرع من بنك الدم الإقليمي',
+    affectedUnitIds: ['DIN-W2026-0811-RBC', 'DIN-W2026-0812-FFP', 'DIN-W2026-0813-PLT'],
+    investigationOwner: 'د. فيصل الشمري (استشاري نقل الدم ورئيس لجنة السلامة)',
+    status: 'recipients_traced',
+    recipientsIdentifiedCount: 2,
+    unitsInStorageQuarantinedCount: 1,
+    unitsAlreadyTransfusedCount: 2,
+    notificationsAttemptedCount: 2,
+    notificationsDeliveredCount: 2,
+    notes: 'تم عزل كيس البلازما المتبقي في الحجر التحقيقي فوراً. تم إشعار الأطباء المعالجين للمريضين المنقول لهما كريات الدم والصفائح لمتابعة الفحص المصلي وتقديم المشورة الطبية.'
+  },
+  {
+    id: 'LK-2026-002',
+    donationId: 'W0422 26 104200',
+    triggerSource: 'post_donation_illness_report',
+    triggerDate: '2026-09-19',
+    donorTestFinding: 'إبلاغ المتبرع عن ظهور أعراض حمى وضنك بعد يومين من التبرع',
+    affectedUnitIds: ['DIN-W2026-0991-RBC', 'DIN-W2026-0992-FFP'],
+    investigationOwner: 'أخصائي أول جودة بنك الدم خالد العريان',
+    status: 'units_located',
+    recipientsIdentifiedCount: 0,
+    unitsInStorageQuarantinedCount: 2,
+    unitsAlreadyTransfusedCount: 0,
+    notificationsAttemptedCount: 0,
+    notificationsDeliveredCount: 0,
+    notes: 'تم حجز كافة المشتقات المصنوعة من هذا التبرع في ثلاجة العزل الوقائي قبل الصرف السريري، وتم منع تسليمها.'
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 17. BIOHAZARD DESTRUCTION & WASTE RECORDS (GAP-04)
+// ----------------------------------------------------------------------------
+export const MOCK_DESTRUCTION_RECORDS: UnitDestructionRecord[] = [
+  {
+    id: 'DST-2026-041',
+    unitId: 'DIN-W2026-0710-RBC',
+    unitNumber: '=W0422 26 07100 00',
+    componentType: 'packed_red_blood_cells',
+    bloodGroupDisplay: 'B سالب (-)',
+    reason: 'expired',
+    reasonDetails: 'انتهاء فترة الصلاحية النظامية (42 يوماً مع مانع التخثر SAGM) دون طلب مطابق',
+    productCondition: 'سليم وغير مثقوب لكن انتهت صلاحيته البيولوجية',
+    authorizedBy: 'د. فيصل الشمري (استشاري نقل الدم)',
+    witnessName: 'ممرضة عواطف السعدون',
+    witnessRole: 'مشرفة التمريض السريري',
+    destroyedAt: '2026-09-19 09:15 ص',
+    methodOfDisposal: 'biohazard_incineration'
+  },
+  {
+    id: 'DST-2026-042',
+    unitId: 'DIN-W2026-0822-PLT',
+    unitNumber: '=W0422 26 08220 00',
+    componentType: 'platelets_apheresis',
+    bloodGroupDisplay: 'O موجب (+)',
+    reason: 'severe_cold_chain_excursion',
+    reasonDetails: 'تعرض لحرارة منخفضة جداً بالخطأ تسببت بتخثر وتلف الصفائح أثناء النقل الخارجي',
+    productCondition: 'تكتل ميكانيكي ملحوظ وترسب غير طبيعي',
+    authorizedBy: 'أخصائي مختبر بدر العتيبي',
+    witnessName: 'فني مختبر حمود الصالح',
+    witnessRole: 'فني بنك الدم المساعد',
+    destroyedAt: '2026-09-18 04:30 م',
+    methodOfDisposal: 'autoclave_waste'
+  }
+];
+
+// ----------------------------------------------------------------------------
+// 18. CONSOLIDATED B01 - B30 AUDIT SCENARIO DEFINITIONS
+// ----------------------------------------------------------------------------
+export const SCENARIOS_B01_B30 = [
+  { id: 'B01', code: 'B01', titleAr: 'طلب روتيني لكريات دم حمراء وتوافق متبادل كامل', category: 'Routine RBC', tab: 'incoming_requests' },
+  { id: 'B02', code: 'B02', titleAr: 'صرف طارئ غير متوافق لإنقاذ حياة ومتابعة الفحص الرجعي', category: 'Emergency Release', tab: 'compatibility' },
+  { id: 'B03', code: 'B03', titleAr: 'اشتباه عدم تطابق هوية المريض وإيقاف الصرف الفوري', category: 'Patient Safety', tab: 'samples' },
+  { id: 'B04', code: 'B04', titleAr: 'عينة دم للمريض الخطأ (WBIT) وإجراءات إعادة السحب', category: 'Specimen Integrity', tab: 'samples' },
+  { id: 'B05', code: 'B05', titleAr: 'عينة غير مطابقة للشروط أو بدون ملصق كامل', category: 'Rejection Workflow', tab: 'samples' },
+  { id: 'B06', code: 'B06', titleAr: 'عينة مرفوضة لتحللها مع إصدار طلب إعادة سحب عاجل', category: 'Sample Rejection', tab: 'samples' },
+  { id: 'B07', code: 'B07', titleAr: 'تناقض بين الفحص الأمامي والعكسي لفصائل الدم ABO', category: 'Typing Discrepancy', tab: 'grouping_typing' },
+  { id: 'B08', code: 'B08', titleAr: 'تناقض الفصيلة الحالية مع السجل التاريخي للمريض', category: 'Historical Mismatch', tab: 'grouping_typing' },
+  { id: 'B09', code: 'B09', titleAr: 'مسح أضداد إيجابي يتطلب إجراءات تشخيصية ممتدة', category: 'Antibody Screen', tab: 'antibody_screen' },
+  { id: 'B10', code: 'B10', titleAr: 'تحديد الجسم المضاد غير المتوقع (Anti-Kell)', category: 'Immunohematology', tab: 'antibody_screen' },
+  { id: 'B11', code: 'B11', titleAr: 'اختيار وحدات سالبة للمستضد المعني ومطابقتها', category: 'Antigen Matching', tab: 'compatibility' },
+  { id: 'B12', code: 'B12', titleAr: 'تقييم أهلية التوافق الإلكتروني وفق المعايير الدولية', category: 'Electronic Crossmatch', tab: 'compatibility' },
+  { id: 'B13', code: 'B13', titleAr: 'توافق سريع بالطرد المركزي الفوري (Immediate Spin)', category: 'Crossmatch Method', tab: 'compatibility' },
+  { id: 'B14', code: 'B14', titleAr: 'توافق متبادل كامل بأضداد الجلوبيولين البشري (AHG Crossmatch)', category: 'AHG Testing', tab: 'compatibility' },
+  { id: 'B15', code: 'B15', titleAr: 'عدم توافق متبادل وحظر الوحدة والتنسيق مع الطبيب', category: 'Incompatibility', tab: 'compatibility' },
+  { id: 'B16', code: 'B16', titleAr: 'انحراف سلسلة التبريد وحجر المشتق الفوري (Cold-chain excursion and quarantine)', category: 'Cold Chain Excursion', tab: 'returns_disposition' },
+  { id: 'B17', code: 'B17', titleAr: 'وحدة دم منتهية الصلاحية أو تالفة وإجراءات العزل والإتلاف (Expired or damaged blood unit)', category: 'Damaged/Expired Unit', tab: 'inventory_context' },
+  { id: 'B18', code: 'B18', titleAr: 'وحدة دم غير مطابقة عند التحقق بسرير المريض مع إيقاف/إرجاع (Wrong blood unit at bedside verification)', category: 'Bedside Verification', tab: 'returns_disposition' },
+  { id: 'B19', code: 'B19', titleAr: 'بدء نقل الدم وتوقفه بسبب إشكالية سريرية وإشعار بنك الدم (Transfusion started and interrupted)', category: 'Interrupted Transfusion', tab: 'reactions_investigation' },
+  { id: 'B20', code: 'B20', titleAr: 'اشتباه تفاعل نقل دم وبدء التحقيق وحجر البقايا (Suspected transfusion reaction)', category: 'Suspected Reaction', tab: 'reactions_investigation' },
+  { id: 'B21', code: 'B21', titleAr: 'التحقق الثنائي عند تسليم وصرف مشتق الدم للقسم', category: 'Issue & Handoff', tab: 'ready_issue' },
+  { id: 'B22', code: 'B22', titleAr: 'إرجاع وحدة دم سليمة ضمن نافذة 30 دقيقة وقبولها بالمخزون', category: 'Product Returns', tab: 'returns_disposition' },
+  { id: 'B23', code: 'B23', titleAr: 'عزل وحدة مرتجعة تجاوزت وقت الأمان أو شك بحرارتها', category: 'Quarantine Action', tab: 'returns_disposition' },
+  { id: 'B24', code: 'B24', titleAr: 'تفعيل بروتوكول النقل الهائل للدم (MTP) لرضوح حادة', category: 'MTP Activation', tab: 'operational_home' },
+  { id: 'B25', code: 'B25', titleAr: 'صرف الحزمة الثانية المتوازنة لمتابعة إنعاش النزيف', category: 'MTP Replenishment', tab: 'operational_home' },
+  { id: 'B26', code: 'B26', titleAr: 'إيقاف وإنهاء بروتوكول MTP واستعادة الوحدات غير المستخدمة', category: 'MTP Deactivation', tab: 'operational_home' },
+  { id: 'B27', code: 'B27', titleAr: 'التحقيق في اشتباه تفاعل انحلال دموي حاد ودرجة السببية', category: 'Hemovigilance', tab: 'reactions_investigation' },
+  { id: 'B28', code: 'B28', titleAr: 'تفاعل حموي غير انحلالي وتوثيق سجل التواصل السريري', category: 'Adverse Event', tab: 'reactions_investigation' },
+  { id: 'B29', code: 'B29', titleAr: 'تتبع استعادي وسحب المشتقات المصابة (Lookback & Recall)', category: 'Traceability', tab: 'inventory_context' },
+  { id: 'B30', code: 'B30', titleAr: 'إتلاف نفايات حيوية لوحدة تالفة مع توثيق الشاهد', category: 'Waste Tracking', tab: 'inventory_context' }
 ];

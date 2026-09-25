@@ -163,8 +163,15 @@ export const CollectionWorklistView: React.FC<CollectionWorklistViewProps> = ({
                     >
                       {specimen.collectionPriority.toUpperCase()}
                     </span>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      مجدول: {specimen.scheduledCollectionTime}
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      <span>مجدول: </span>
+                      {specimen.scheduledCollectionTime ? (
+                        <span>{specimen.scheduledCollectionTime}</span>
+                      ) : (
+                        <span className="text-amber-700 font-bold bg-amber-50 px-1 py-0.5 rounded">
+                          غير متاح (Unavailable)
+                        </span>
+                      )}
                     </div>
                   </td>
 
@@ -198,11 +205,19 @@ export const CollectionWorklistView: React.FC<CollectionWorklistViewProps> = ({
                         ? 'عينة مرفوضة'
                         : specimen.status}
                     </span>
-                    {specimen.collectedDateTime && (
-                      <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
-                        {specimen.collectedDateTime}
-                      </span>
-                    )}
+                    <div className="text-[10px] mt-0.5 font-mono">
+                      {specimen.status === 'collected' ? (
+                        specimen.collectedDateTime ? (
+                          <span className="text-slate-500">{specimen.collectedDateTime}</span>
+                        ) : (
+                          <span className="text-amber-800 font-bold bg-amber-50 px-1 rounded">
+                            وقت السحب: غير متاح (Unavailable)
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-slate-400 italic">بانتظار تنفيذ السحب</span>
+                      )}
+                    </div>
                   </td>
 
                   <td className="p-3 text-center">
