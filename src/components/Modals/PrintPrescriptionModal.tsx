@@ -56,8 +56,8 @@ export const PrintPrescriptionModal: React.FC = () => {
                 <p className="text-xs font-semibold text-teal-800">
                   Edina Specialized Hospital & Clinics • Medical City
                 </p>
-                <p className="text-[10px] text-slate-500 font-mono">
-                  ISO 9001:2026 Certified • JCI & CBAHI Accredited Hospital • الخط الساخن: 19888
+                <p className="text-[10px] text-amber-700 font-sans">
+                  نموذج معاينة اصطناعي تجريبي (Synthetic Preview) • لا يُعتد به قانونياً خارج بيئة المحاكاة
                 </p>
               </div>
             </div>

@@ -376,7 +376,7 @@ export const PatientClinicalWorkspace: React.FC = () => {
       <PatientSafetyBanner patient={patient} />
 
       {/* 2. Clinical Activity Tabs Navigation Rail */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-xs sticky top-[168px] z-20 overflow-x-auto scrollbar-none">
+      <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-xs mb-4 overflow-x-auto scrollbar-none">
         <div className="flex items-center gap-1.5 min-w-max">
           {activities.map(act => {
             const isActive = activeWorkspaceActivity === act.id;
@@ -384,17 +384,18 @@ export const PatientClinicalWorkspace: React.FC = () => {
               <button
                 key={act.id}
                 onClick={() => switchWorkspaceActivity(act.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   isActive
                     ? 'bg-teal-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
+                title={act.labelEn}
               >
                 <span className={isActive ? 'text-white' : 'text-teal-600'}>
                   {act.icon}
                 </span>
                 <span>{act.labelAr}</span>
-                <span className={`text-[10px] font-mono hidden md:inline opacity-75`}>
+                <span className={`text-[10px] font-mono hidden xl:inline opacity-75`}>
                   ({act.labelEn})
                 </span>
                 {act.badge && (

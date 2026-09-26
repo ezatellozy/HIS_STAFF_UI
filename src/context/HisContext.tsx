@@ -682,11 +682,27 @@ export const HisProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const activeSecurityGroup =
     HIS_SECURITY_GROUPS.find(g => g.id === activeSecurityGroupId) || HIS_SECURITY_GROUPS[0];
 
+  const resetSensitiveForegroundContext = () => {
+    setActiveWorkspacePatientId(null);
+    setActiveConsultationAppointmentId(null);
+    setActiveTransactionModalAppointmentId(null);
+    setSelectedReceiptTransaction(null);
+    setViewPatientModalId(null);
+    setActiveProgressNotesPatientId(null);
+    setIsLifecycleModalOpen(false);
+    setSelectedLifecyclePatientId(null);
+    setStandardsModalState({ isOpen: false });
+    setPrintPrescriptionData(null);
+  };
+
   const loginAsSecurityGroup = (
     groupId: string,
     staffId?: string,
     targetDept?: HospitalDepartment
   ) => {
+    // Shared Workstation Safeguard: Clear sensitive foreground patient/case state
+    resetSensitiveForegroundContext();
+
     const group = HIS_SECURITY_GROUPS.find(g => g.id === groupId) || HIS_SECURITY_GROUPS[0];
     const staff =
       MOCK_STAFF.find(s => s.id === (staffId || group.suggestedStaffId)) ||
@@ -712,6 +728,8 @@ export const HisProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    // Shared Workstation Safeguard: Clear sensitive foreground patient/case state
+    resetSensitiveForegroundContext();
     setIsAuthenticated(false);
     localStorage.setItem('his_is_auth', 'false');
   };
@@ -734,6 +752,8 @@ export const HisProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [currentStaff.id, userAvailableRoles, currentRole]);
 
   const setCurrentStaff = (staff: StaffUser) => {
+    // Shared Workstation Safeguard: Clear sensitive foreground patient/case state
+    resetSensitiveForegroundContext();
     setActiveStaffId(staff.id);
     setCurrentRole(staff.role);
     localStorage.setItem('his_active_staff_id', staff.id);

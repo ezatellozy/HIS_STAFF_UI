@@ -36,6 +36,7 @@ import { RevenueCycleOpsShell } from './components/RevenueCycleOps/RevenueCycleO
 import { CSSDOpsShell } from './components/CSSDOps/CSSDOpsShell';
 import { BiomedicalOpsShell } from './components/BiomedicalOps/BiomedicalOpsShell';
 import { HIMOpsShell } from './components/HIMOps/HIMOpsShell';
+import { QualitySafetyOpsShell } from './components/QualitySafetyOps/QualitySafetyOpsShell';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ShieldCheck, Activity, HeartHandshake } from 'lucide-react';
 import { EdinaLogo } from './components/common/EdinaLogo';
@@ -149,6 +150,9 @@ const MainLayout: React.FC = () => {
         ) : activeWorkArea === 'him_ops' ? (
           /* Health Information Management (HIM) & Medical Records UX */
           <HIMOpsShell />
+        ) : activeWorkArea === 'quality_safety_ops' ? (
+          /* Quality, Patient Safety, Risk & Infection Control UX */
+          <QualitySafetyOpsShell />
         ) : activeWorkArea === 'supply_chain_ops' ? (
           /* Enterprise Inventory, Materials Management & Supply Chain Operations UX */
           <SupplyChainOpsShell />
@@ -213,9 +217,9 @@ const MainLayout: React.FC = () => {
             <span className="text-slate-300">|</span>
             <span className="font-mono text-slate-500">HL7 FHIR R4</span>
             <span className="text-slate-300">|</span>
-            <span className="font-mono text-blue-600 font-bold">NPHIES Gateway</span>
+            <span className="font-mono text-blue-600 font-bold">NPHIES Simulator</span>
             <span className="text-slate-300">|</span>
-            <span className="text-emerald-600 font-semibold">● نظام متصل ومحدث لحظياً</span>
+            <span className="text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">● بيئة محاكاة سريرية واختبار اصطناعية (Synthetic Preview)</span>
           </div>
         </div>
       </footer>

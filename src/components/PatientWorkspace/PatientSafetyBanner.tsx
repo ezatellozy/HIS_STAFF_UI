@@ -158,19 +158,19 @@ export const PatientSafetyBanner: React.FC<PatientSafetyBannerProps> = ({ patien
 
   return (
     <>
-      <div className="sticky top-14 sm:top-16 z-30 bg-slate-900 text-white rounded-2xl border-2 border-slate-700 shadow-xl mb-4 overflow-hidden">
+      <div className="relative z-30 bg-slate-900 text-white rounded-2xl border border-slate-700/80 shadow-xl mb-4 overflow-hidden">
         {/* Urgent Alert Ticker if Critical Transfer or Alert */}
         {activeTrans && (
-          <div className="bg-cyan-950/90 border-b border-cyan-800 text-cyan-200 px-4 py-1.5 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 font-bold">
-              <ArrowRightLeft className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-              <span>
+          <div className="bg-cyan-950/90 border-b border-cyan-800 text-cyan-200 px-3 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-xs">
+            <div className="flex items-center gap-2 font-bold min-w-0">
+              <ArrowRightLeft className="w-3.5 h-3.5 text-cyan-400 animate-pulse shrink-0" />
+              <span className="truncate">
                 طلب انتقال سريري نشط: من <strong>{activeTrans.fromLocation}</strong> إلى <strong>{activeTrans.toLocation}</strong> • الحالة: {activeTrans.status}
               </span>
             </div>
             <button
               onClick={() => setShowTransitionModal(true)}
-              className="text-[11px] underline font-bold hover:text-white cursor-pointer"
+              className="text-[11px] underline font-bold hover:text-white cursor-pointer shrink-0"
             >
               متابعة مسار SBAR ➔
             </button>
@@ -181,72 +181,79 @@ export const PatientSafetyBanner: React.FC<PatientSafetyBannerProps> = ({ patien
         {isTemporaryIdentity && (
           <div
             id="temporary-identity-safety-banner"
-            className="bg-amber-950/95 border-b border-amber-600 text-amber-100 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs"
+            className="bg-amber-950/95 border-b border-amber-600 text-amber-100 px-3 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           >
-            <div className="flex items-center gap-2 font-bold">
-              <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
-              <span>
+            <div className="flex items-center gap-2 font-bold min-w-0">
+              <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
+              <span className="leading-snug">
                 تنبيه ADT: هوية المريض مؤقتة / غير مكتملة المصادقة ({patient.mrn}) • لا يجوز استخدام رقم السرير أو الغرفة كمعرّف للشخص!
               </span>
             </div>
             <button
               onClick={() => setShowVerificationModal(true)}
-              className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-lg text-[11px] shadow-xs cursor-pointer transition-colors"
+              className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-lg text-[11px] shadow-xs cursor-pointer transition-colors shrink-0"
             >
               إجراء التحقق النشط من الهوية ➔
             </button>
           </div>
         )}
 
-        {/* Main Banner Grid */}
-        <div className="p-3 sm:p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4">
-          {/* Identity Block */}
-          <div className="flex items-start gap-3">
-            {/* Back Button */}
-            <button
-              onClick={closePatientWorkspace}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
-              title={getOriginLabel()}
-            >
-              <ArrowRight className="w-4 h-4 text-teal-400" />
-              <span className="hidden sm:inline">{getOriginLabel()}</span>
-              <span className="sm:hidden">رجوع</span>
-            </button>
+        {/* Main Banner Body */}
+        <div className="p-3.5 sm:p-4 md:p-5 flex flex-col gap-3.5">
+          {/* Top Tier: Patient Identity on Right, Action Buttons on Left */}
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 min-w-0">
+            {/* Identity Block */}
+            <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+              {/* Back Button */}
+              <button
+                onClick={closePatientWorkspace}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+                title={getOriginLabel()}
+              >
+                <ArrowRight className="w-4 h-4 text-teal-400 shrink-0" />
+                <span className="hidden md:inline">{getOriginLabel()}</span>
+                <span className="md:hidden">رجوع</span>
+              </button>
 
-            {/* Patient Avatar & Identifiers */}
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300 font-black text-base shadow-inner shrink-0">
+              {/* Patient Avatar & Initials */}
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300 font-black text-base shadow-inner shrink-0">
                 {patient.fullNameAr[0]}
               </div>
 
-              <div>
+              {/* Patient Full Name & Metadata */}
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  <h2
+                    className="text-base sm:text-lg lg:text-xl font-black text-white tracking-tight break-words"
+                    title={patient.fullNameAr}
+                  >
                     {patient.fullNameAr}
                   </h2>
-                  <span className="text-xs text-slate-400 font-medium" dir="ltr">
-                    ({patient.fullNameEn})
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-teal-950 text-teal-300 font-mono text-xs font-black border border-teal-800">
+                  {patient.fullNameEn && (
+                    <span className="text-xs text-slate-400 font-medium hidden sm:inline" dir="ltr">
+                      ({patient.fullNameEn})
+                    </span>
+                  )}
+                  <span className="px-2 py-0.5 rounded-md bg-teal-950 text-teal-300 font-mono text-xs font-black border border-teal-800 shrink-0">
                     {patient.mrn}
                   </span>
                   {isTemporaryIdentity && (
-                    <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-bold text-[10px] animate-pulse">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-bold text-[10px] animate-pulse shrink-0">
                       هوية مؤقتة (Temp ID)
                     </span>
                   )}
                 </div>
 
-                {/* Sub-identifiers: Age, Gender, DOB, Configured National/Iqama ID, Encounter */}
-                <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-300">
+                {/* Sub-identifiers: Age, Gender, DOB, Configured National/Iqama ID, Encounter, Blood Group */}
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-xs text-slate-300">
                   <span>العمر: <strong className="text-white">{patient.age} سنة</strong></span>
-                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-600 hidden xs:inline">•</span>
                   <span>الجنس: <strong className="text-white">{patient.gender === 'male' ? 'ذكر' : 'أنثى'}</strong></span>
-                  <span className="text-slate-600">•</span>
-                  <span>الميلاد: <span className="font-mono text-slate-300">{patient.dob}</span></span>
-                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-600 hidden xs:inline">•</span>
+                  <span className="hidden sm:inline">الميلاد: <span className="font-mono text-slate-300">{patient.dob}</span></span>
+                  <span className="text-slate-600 hidden sm:inline">•</span>
                   <span title="المعرّف الرسمي المعتمد (الهوية الوطنية / الإقامة / وثيقة السفر)">
-                    المعرّف المعتمد: <span className="font-mono text-slate-300">{patient.nationalId}</span>
+                    المعرّف المعتمد: <span className="font-mono text-slate-200">{patient.nationalId}</span>
                   </span>
                   <span className="text-slate-600">•</span>
                   <span className="px-1.5 py-0.5 rounded bg-slate-800 text-teal-300 border border-slate-700 font-mono text-[11px]" title="معرف الزيارة / التنويم السريري الحالي (Encounter)">
@@ -257,95 +264,109 @@ export const PatientSafetyBanner: React.FC<PatientSafetyBannerProps> = ({ patien
                 </div>
               </div>
             </div>
+
+            {/* Quick Safety Flags & Action Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-auto justify-end">
+              {/* Patient Identity Verification Action Pattern */}
+              <button
+                id="trigger-identity-verification-btn"
+                onClick={() => setShowVerificationModal(true)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                  lastVerificationRecord
+                    ? 'bg-emerald-700 hover:bg-emerald-600 text-white border border-emerald-500'
+                    : 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500'
+                }`}
+                title="التحقق الإيجابي من هوية المريض بمعرّفين اثنين قبل أي إجراء سريري"
+              >
+                {lastVerificationRecord ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
+                    <span>تم التحقق ({lastVerificationRecord.timestamp})</span>
+                  </>
+                ) : (
+                  <>
+                    <Scan className="w-3.5 h-3.5 text-teal-200 shrink-0" />
+                    <span className="hidden sm:inline">التحقق من الهوية (Verify ID)</span>
+                    <span className="sm:hidden">التحقق من الهوية</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowTransitionModal(true)}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                title="إجراء أو استكمال انتقال سريري وتسليم SBAR بين الأقسام"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">انتقال سريري (Transition)</span>
+                <span className="sm:hidden">انتقال سريري</span>
+              </button>
+
+              <button
+                onClick={() => openLifecycleModal(patient.id)}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                title="عرض دورة ومسار المريض الشاملة"
+              >
+                <GitFork className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">مسار المريض</span>
+              </button>
+
+              <button
+                onClick={() => openStandardsModal(patient.id, undefined, 'fhir')}
+                className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all cursor-pointer"
+                title="تصدير حزمة FHIR R4 للمريض"
+              >
+                <FileCode className="w-4 h-4 text-blue-400" />
+              </button>
+            </div>
           </div>
 
-          {/* Context, Location (explicitly location only, not identifier) & Care Team */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Context, Location & Care Team Responsive Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2.5 border-t border-slate-800/80 text-xs">
             <div className="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 leading-tight" title="الموقع السريري الحالي (محدد موقع سريري وليس معرّفاً للمريض)">
               <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                <Bed className="w-3 h-3 text-teal-400" /> الموقع السريري (Location Only):
+                <Bed className="w-3 h-3 text-teal-400 shrink-0" />
+                <span>الموقع السريري (Location Only):</span>
               </div>
-              <strong className="text-teal-300 font-bold block mt-0.5">{careAreaLabel}</strong>
+              <strong className="text-teal-300 font-bold block mt-0.5 truncate">{careAreaLabel}</strong>
               <span className="text-[11px] text-slate-300 font-mono">{bedRoomLabel}</span>
             </div>
 
             <div className="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 leading-tight">
               <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                <UserCheck className="w-3 h-3 text-blue-400" /> الفريق المعالج:
+                <UserCheck className="w-3 h-3 text-blue-400 shrink-0" />
+                <span>الفريق المعالج:</span>
               </div>
-              <strong className="text-slate-100 font-bold block mt-0.5">{attendingDoctor}</strong>
-              <span className="text-[11px] text-slate-300">{primaryNurse}</span>
+              <strong className="text-slate-100 font-bold block mt-0.5 truncate">{attendingDoctor}</strong>
+              <span className="text-[11px] text-slate-300 truncate block">{primaryNurse}</span>
             </div>
 
             {/* Contextual Clinical Indicator: Only shown when critical or in ICU/ER to prevent crowding */}
-            {isCriticalVitals && relevantVitals && (
-              <div className="bg-red-950/60 border border-red-700 px-3 py-1.5 rounded-xl leading-tight animate-pulse">
+            {isCriticalVitals && relevantVitals ? (
+              <div className="bg-red-950/60 border border-red-700 px-3 py-1.5 rounded-xl leading-tight animate-pulse sm:col-span-2 lg:col-span-1">
                 <div className="text-[10px] text-red-300 font-bold flex items-center gap-1">
-                  <HeartPulse className="w-3 h-3 text-red-400" /> مؤشر سريري حرج (NEWS2: {news2Score})
+                  <HeartPulse className="w-3 h-3 text-red-400 shrink-0" />
+                  <span>مؤشر سريري حرج (NEWS2: {news2Score})</span>
                 </div>
                 <div className="text-xs font-mono font-bold text-red-200 mt-0.5">
                   ضغط: {relevantVitals.bpSystolic}/{relevantVitals.bpDiastolic} • أكسجين: {relevantVitals.spo2}%
                 </div>
               </div>
+            ) : (
+              <div className="bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/60 leading-tight hidden lg:block">
+                <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>حالة المتابعة السريرية:</span>
+                </div>
+                <strong className="text-emerald-400 font-bold block mt-0.5">نشطة ومستقرة</strong>
+                <span className="text-[11px] text-slate-300">مستوى الخطورة العام: مستقر (Routine)</span>
+              </div>
             )}
-          </div>
-
-          {/* Quick Safety Flags & Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Patient Identity Verification Action Pattern */}
-            <button
-              id="trigger-identity-verification-btn"
-              onClick={() => setShowVerificationModal(true)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
-                lastVerificationRecord
-                  ? 'bg-emerald-700 hover:bg-emerald-600 text-white border border-emerald-500'
-                  : 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500'
-              }`}
-              title="التحقق الإيجابي من هوية المريض بمعرّفين اثنين قبل أي إجراء سريري"
-            >
-              {lastVerificationRecord ? (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
-                  <span>تم التحقق ({lastVerificationRecord.timestamp})</span>
-                </>
-              ) : (
-                <>
-                  <Scan className="w-3.5 h-3.5 text-teal-200" />
-                  <span>التحقق من الهوية (Verify ID)</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setShowTransitionModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-              title="إجراء أو استكمال انتقال سريري وتسليم SBAR بين الأقسام"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>انتقال سريري (Transition)</span>
-            </button>
-
-            <button
-              onClick={() => openLifecycleModal(patient.id)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-              title="عرض دورة ومسار المريض الشاملة"
-            >
-              <GitFork className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">مسار المريض</span>
-            </button>
-
-            <button
-              onClick={() => openStandardsModal(patient.id, undefined, 'fhir')}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all cursor-pointer"
-              title="تصدير حزمة FHIR R4 للمريض"
-            >
-              <FileCode className="w-4 h-4 text-blue-400" />
-            </button>
           </div>
         </div>
 
         {/* Safety Strip: Allergies (Dedicated View-Model), Isolation, Fall Risk */}
-        <div className="bg-slate-950/90 border-t border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="bg-slate-950/90 border-t border-slate-800 px-3 sm:px-4 py-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             {/* Dedicated Allergy Status View-Model Indicator */}
             <AllergyStatusIndicator

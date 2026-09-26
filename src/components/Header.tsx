@@ -12,6 +12,8 @@ import {
   Building2,
   Users,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileCode,
   Siren,
   Bed,
@@ -36,12 +38,27 @@ import {
   Receipt,
   Flame,
   HeartPulse,
-  FileText
+  FileText,
+  ShieldAlert,
+  Wind,
+  Gauge,
+  Pause,
+  Play,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { useHis } from '../context/HisContext';
 import { StaffRole, HospitalDepartment } from '../types/his';
+import { ClinicalWorkArea } from '../types/clinicalWorkspace';
 import { EMERGENCY_CODES, HospitalEmergencyCode, EMERGENCY_CODE_LIST } from '../utils/emergencyCodes';
 import { EdinaLogo } from './common/EdinaLogo';
+import { EmergencySoundSettingsModal } from './common/EmergencySoundSettingsModal';
+import {
+  EmergencyToneSettings,
+  loadEmergencyToneSettings,
+  saveEmergencyToneSettings,
+  playEmergencyTone
+} from '../utils/emergencyTones';
 
 export const Header: React.FC = () => {
   const {
@@ -93,6 +110,13 @@ export const Header: React.FC = () => {
   const [showEmergencyMenu, setShowEmergencyMenu] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+
+  // Hospital Emergency Live Ticker State
+  const [activeTickerIndex, setActiveTickerIndex] = useState<number>(0);
+  const [isTickerPaused, setIsTickerPaused] = useState<boolean>(false);
+  const [isTickerVisible, setIsTickerVisible] = useState<boolean>(true);
+  const [toneSettings, setToneSettings] = useState<EmergencyToneSettings>(loadEmergencyToneSettings);
+  const [isToneModalOpen, setIsToneModalOpen] = useState<boolean>(false);
 
   const activeWorkspacePatient = activeWorkspacePatientId
     ? (patients.find(p => p.id === activeWorkspacePatientId) ||
@@ -170,6 +194,96 @@ export const Header: React.FC = () => {
   const activeIcuCount = icuBeds.filter(b => b.patientId).length;
   const activeSurgeryCount = surgeryCases.filter(c => c.status === 'in_theatre').length;
 
+  // Emergency & Capacity Live Ticker Metrics
+  const totalIcuBeds = icuBeds.length;
+  const availableIcuBeds = icuBeds.filter(b => b.bedStatus === 'available' || (!b.patientId && b.bedStatus !== 'occupied' && b.bedStatus !== 'blocked')).length;
+  const ventilatedIcuCount = icuBeds.filter(b => b.ventilator?.isVentilated).length;
+  const erResusCases = erPatients.filter(p => p.triageLevel === 1 || p.assignedArea === 'resus_bay').length;
+
+  interface TickerItem {
+    id: string;
+    level: 'critical' | 'warning' | 'info' | 'success';
+    badge: string;
+    textAr: string;
+    detailAr: string;
+    icon: React.ReactNode;
+    actionTarget?: { workArea?: ClinicalWorkArea; department?: HospitalDepartment };
+  }
+
+  const tickerAlerts: TickerItem[] = [
+    {
+      id: 'icu-bed-capacity',
+      level: availableIcuBeds <= 1 ? 'critical' : availableIcuBeds <= 2 ? 'warning' : 'info',
+      badge: `عناية مركزة ICU: ${availableIcuBeds} شاغر من ${totalIcuBeds}`,
+      textAr: availableIcuBeds > 0 
+        ? `توفر ${availableIcuBeds} أسرة عناية مركزة شاغرة جاهزة للقبول الفوري (منها ${ventilatedIcuCount} تحت أجهزة التنفس الصناعي)`
+        : 'تنبيه امتلاء: جميع أسرّة العناية المركزة مشغولة حالياً بالكامل (Full Capacity)',
+      detailAr: 'بروتوكول القبول السريع للحالات الحرجة نشط',
+      icon: <Bed className="w-3.5 h-3.5" />,
+      actionTarget: { department: 'icu' }
+    },
+    {
+      id: 'oxygen-supply-status',
+      level: 'success',
+      badge: 'شبكة الأكسجين المركزي: 98.4%',
+      textAr: 'ضغط شبكة الغازات الطبية والأكسجين المسال مستقر عند 4.3 Bar مع رصيد تشغيلي 14 يوماً بمحطة التخزين المركزية',
+      detailAr: 'أجهزة المراقبة الذكية تعمل بدون تسريب',
+      icon: <Wind className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'er-trauma-flow',
+      level: erResusCases > 0 ? 'warning' : 'info',
+      badge: `طوارئ ER: ${activeErCount} حالة`,
+      textAr: erResusCases > 0 
+        ? `جناح الصدمات والإنعاش يستقبل ${erResusCases} حالات حرجة (CTAS-1) • متوسط زمن الرؤية الطبية 4 دقائق`
+        : `قسم الطوارئ يعمل بجاهزية كاملة (${activeErCount} حالات نشطة) مع تواجد استشاري الرضوح المناوب`,
+      detailAr: 'جاهزية بنك الدم وفحوصات STAT متوفرة',
+      icon: <Siren className="w-3.5 h-3.5" />,
+      actionTarget: { department: 'er' }
+    },
+    {
+      id: 'blood-bank-reserves',
+      level: 'info',
+      badge: 'بنك الدم: فصيلة O- سالبة متوفرة',
+      textAr: 'مخزون الطوارئ العام للدم وفصائل الطوارئ الشاملة (O Negative) جاهزة لنداء بروتوكول النقل الهائل MTP فورياً',
+      detailAr: '24 وحدة دم مكدس + 18 بلازما طازجة مجمدة',
+      icon: <Droplet className="w-3.5 h-3.5" />,
+      actionTarget: { workArea: 'blood_bank_ops' }
+    },
+    {
+      id: 'or-surgical-readiness',
+      level: 'info',
+      badge: `غرف العمليات OR: ${activeSurgeryCount} جارية`,
+      textAr: `مسارح العمليات تعمل ببروتوكول الجراحة الآمنة لمنظمة الصحة (WHO Checklist) مع توافر غرفة طوارئ شاغرة 24/7`,
+      detailAr: 'جاهزية التعقيم المركزي CSSD مؤكدة',
+      icon: <Scissors className="w-3.5 h-3.5" />,
+      actionTarget: { department: 'or' }
+    }
+  ];
+
+  // Rotate ticker automatically unless paused
+  useEffect(() => {
+    if (isTickerPaused || !isTickerVisible || tickerAlerts.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveTickerIndex(prev => {
+        const nextIdx = (prev + 1) % tickerAlerts.length;
+        const nextAlert = tickerAlerts[nextIdx];
+        if (toneSettings.soundEnabled && toneSettings.autoPlayOnRotation && nextAlert) {
+          playEmergencyTone(nextAlert.level, toneSettings.tones[nextAlert.level], toneSettings.volume);
+        }
+        return nextIdx;
+      });
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [isTickerPaused, isTickerVisible, tickerAlerts, toneSettings]);
+
+  // Play critical tone when an emergency code is triggered
+  useEffect(() => {
+    if (emergencyCode && toneSettings.soundEnabled) {
+      playEmergencyTone('critical', toneSettings.tones.critical, toneSettings.volume);
+    }
+  }, [emergencyCode, toneSettings.soundEnabled, toneSettings.tones.critical, toneSettings.volume]);
+
   return (
     <header className="bg-slate-900 text-slate-100 border-b border-slate-800 shadow-md sticky top-0 z-40">
       {/* Top Banner for Emergency Code */}
@@ -229,6 +343,209 @@ export const Header: React.FC = () => {
               </button>
             </div>
           </div>
+        );
+      })()}
+
+      {/* Hospital Emergency Live Ticker Bar (شريط التنبيهات وحالة الطوارئ الحية بالمستشفى) */}
+      {isTickerVisible && tickerAlerts.length > 0 && (() => {
+        const currentAlert = tickerAlerts[activeTickerIndex] || tickerAlerts[0];
+        const isCritical = currentAlert.level === 'critical';
+        const isWarning = currentAlert.level === 'warning';
+        const isSuccess = currentAlert.level === 'success';
+
+        const tickerBg = isCritical
+          ? 'bg-rose-950/90 border-rose-800/80 text-rose-100'
+          : isWarning
+          ? 'bg-amber-950/80 border-amber-800/70 text-amber-100'
+          : isSuccess
+          ? 'bg-emerald-950/70 border-emerald-800/60 text-emerald-100'
+          : 'bg-slate-950/90 border-slate-800 text-slate-200';
+
+        const badgeStyle = isCritical
+          ? 'bg-rose-600 text-white border-rose-400 font-extrabold animate-pulse'
+          : isWarning
+          ? 'bg-amber-600 text-white border-amber-400 font-bold'
+          : isSuccess
+          ? 'bg-emerald-600 text-white border-emerald-400 font-bold'
+          : 'bg-teal-700 text-white border-teal-500 font-bold';
+
+        return (
+          <aside
+            aria-label="شريط تنبيهات طوارئ وجاهزية المستشفى"
+            className={`border-b transition-colors py-1.5 px-3 sm:px-6 lg:px-8 text-xs select-none ${tickerBg}`}
+            onMouseEnter={() => setIsTickerPaused(true)}
+            onMouseLeave={() => setIsTickerPaused(false)}
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2.5">
+              {/* Right Side (RTL): Live Ticker Indicator + Badge */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div className="flex items-center gap-1 sm:gap-1.5 bg-black/40 px-1.5 sm:px-2 py-0.5 rounded-md border border-white/10 text-[10px] sm:text-[11px] font-bold text-slate-300">
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      isCritical ? 'bg-rose-400' : isWarning ? 'bg-amber-400' : 'bg-emerald-400'
+                    }`} />
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                      isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`} />
+                  </span>
+                  <span className="hidden sm:inline">حالة الطوارئ الحية</span>
+                  <span className="sm:hidden">طوارئ</span>
+                </div>
+
+                <span className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] border shadow-xs flex items-center gap-1 shrink-0 ${badgeStyle}`}>
+                  {currentAlert.icon}
+                  <span className="max-w-[75px] sm:max-w-none truncate">{currentAlert.badge}</span>
+                </span>
+              </div>
+
+              {/* Middle: Active Alert Animated Text */}
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 text-right overflow-hidden">
+                <span className="font-semibold text-xs truncate leading-tight">
+                  {currentAlert.textAr}
+                </span>
+                <span className="hidden xl:inline text-[11px] opacity-75 shrink-0 bg-white/10 px-2 py-0.5 rounded">
+                  • {currentAlert.detailAr}
+                </span>
+
+                {currentAlert.actionTarget && (
+                  <button
+                    onClick={() => {
+                      if (currentAlert.actionTarget?.department) {
+                        setCurrentDepartment(currentAlert.actionTarget.department);
+                        closePatientWorkspace();
+                      } else if (currentAlert.actionTarget?.workArea) {
+                        setActiveWorkArea(currentAlert.actionTarget.workArea);
+                        closePatientWorkspace();
+                      }
+                    }}
+                    className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold text-white underline underline-offset-2 hover:text-teal-200 shrink-0 cursor-pointer transition-colors"
+                  >
+                    <span>عرض التفاصيل</span>
+                    <ChevronLeft className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Left Side: Controls (Sound Toggle, Tone Settings, Prev, Next, Pause/Play, Dismiss/Hide) */}
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 text-slate-400">
+                {/* Notification Sound Toggle (تفعيل/تعطيل التنبيهات الصوتية لشريط الطوارئ) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextState = !toneSettings.soundEnabled;
+                    const updated = { ...toneSettings, soundEnabled: nextState };
+                    setToneSettings(updated);
+                    saveEmergencyToneSettings(updated);
+                    if (nextState) {
+                      playEmergencyTone(currentAlert.level, updated.tones[currentAlert.level], updated.volume);
+                    }
+                  }}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                    toneSettings.soundEnabled
+                      ? 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border-emerald-600/80 shadow-xs'
+                      : 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border-rose-800/80'
+                  }`}
+                  title={
+                    toneSettings.soundEnabled
+                      ? 'التنبيهات الصوتية مفعّلة (انقر لكتم صوت التنبيهات)'
+                      : 'التنبيهات الصوتية معطلة (انقر لتفعيل صوت التنبيهات)'
+                  }
+                  aria-label="تبديل التنبيهات الصوتية لشريط الطوارئ"
+                >
+                  {toneSettings.soundEnabled ? (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-pulse shrink-0" />
+                      <span className="hidden sm:inline text-[10px]">صوت منبه</span>
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="hidden sm:inline text-[10px]">صامت</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Tone Customization & Severity Selector Button (اختيار نغمات الطوارئ حسب درجة الخطورة) */}
+                <button
+                  type="button"
+                  onClick={() => setIsToneModalOpen(true)}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 hover:border-teal-500/60 transition-all cursor-pointer text-[11px]"
+                  title="تخصيص واختيار نغمات الطوارئ حسب درجة الخطورة (Emergency Alert Tones)"
+                  aria-label="تخصيص نغمات الطوارئ حسب درجة الخطورة"
+                >
+                  <SlidersHorizontal className="w-3 h-3 text-teal-400" />
+                  <span className="hidden md:inline text-[10px]">نغمات الطوارئ</span>
+                </button>
+
+                {/* Index indicators */}
+                <span className="text-[10px] font-mono px-0.5 text-slate-300 hidden lg:inline">
+                  {activeTickerIndex + 1}/{tickerAlerts.length}
+                </span>
+
+                {/* Prev Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prevIdx = (activeTickerIndex - 1 + tickerAlerts.length) % tickerAlerts.length;
+                    setActiveTickerIndex(prevIdx);
+                    if (toneSettings.soundEnabled) {
+                      const prevAlert = tickerAlerts[prevIdx];
+                      if (prevAlert) {
+                        playEmergencyTone(prevAlert.level, toneSettings.tones[prevAlert.level], toneSettings.volume);
+                      }
+                    }
+                  }}
+                  className="p-1 rounded hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  title="التنبيه السابق"
+                  aria-label="التنبيه السابق"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Pause/Play Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsTickerPaused(prev => !prev)}
+                  className="p-1 rounded hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  title={isTickerPaused ? 'استئناف التمرير التلقائي' : 'إيقاف التمرير التلقائي مؤقتاً'}
+                  aria-label={isTickerPaused ? 'استئناف التمرير التلقائي' : 'إيقاف التمرير التلقائي مؤقتاً'}
+                >
+                  {isTickerPaused ? <Play className="w-3 h-3 text-amber-300" /> : <Pause className="w-3 h-3" />}
+                </button>
+
+                {/* Next Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextIdx = (activeTickerIndex + 1) % tickerAlerts.length;
+                    setActiveTickerIndex(nextIdx);
+                    if (toneSettings.soundEnabled) {
+                      const nextAlert = tickerAlerts[nextIdx];
+                      if (nextAlert) {
+                        playEmergencyTone(nextAlert.level, toneSettings.tones[nextAlert.level], toneSettings.volume);
+                      }
+                    }
+                  }}
+                  className="p-1 rounded hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  title="التنبيه التالي"
+                  aria-label="التنبيه التالي"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Close/Hide Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsTickerVisible(false)}
+                  className="p-1 mr-0.5 rounded hover:bg-white/10 hover:text-rose-300 transition-colors cursor-pointer"
+                  title="إخفاء شريط التنبيهات"
+                  aria-label="إخفاء شريط التنبيهات"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </aside>
         );
       })()}
 
@@ -308,6 +625,31 @@ export const Header: React.FC = () => {
 
           {/* Left (RTL): Global Action Controls & Staff Identity */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Live Emergency Ticker Restore Button (if closed) */}
+            {!isTickerVisible && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsTickerVisible(true)}
+                  className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-teal-950/80 hover:bg-teal-900 text-teal-300 border border-teal-700/80 text-xs font-semibold transition-all cursor-pointer"
+                  title="إعادة إظهار شريط تنبيهات الطوارئ الحية (Show Live Emergency Ticker)"
+                  aria-label="إعادة إظهار شريط تنبيهات الطوارئ الحية"
+                >
+                  <Activity className="w-3.5 h-3.5 text-teal-400 animate-pulse" />
+                  <span className="hidden xl:inline text-[11px]">شريط الطوارئ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsToneModalOpen(true)}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 transition-colors cursor-pointer"
+                  title="نغمات وتنبيهات الطوارئ (Emergency Alert Audio Tones)"
+                  aria-label="نغمات وتنبيهات الطوارئ"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Waiting Room Hall TV Display */}
             <button
               onClick={() => {
@@ -1063,6 +1405,32 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
+          {/* Quality, Patient Safety, Risk & Infection Control Operations Portal */}
+          <button
+            id="nav-quality-safety-ops-button"
+            onClick={() => {
+              setActiveWorkArea('quality_safety_ops');
+              closePatientWorkspace();
+              playChime('call');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeWorkArea === 'quality_safety_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-teal-300 hover:text-white hover:bg-slate-800 border border-teal-500/30'
+            }`}
+            title="إدارة الجودة الشاملة وسلامة المرضى ومكافحة العدوى وإدارة المخاطر (Quality, Safety & IPC)"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-teal-400" />
+            <span>الجودة وسلامة المرضى (Quality & IPC)</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeWorkArea === 'quality_safety_ops' && !activeWorkspacePatientId
+                ? 'bg-teal-800 text-teal-100'
+                : 'bg-teal-950 text-teal-300 border border-teal-800'
+            }`}>
+              QPS
+            </span>
+          </button>
+
           {/* Level 3: Active Patient Workspace Pill (If open) */}
           {activeWorkspacePatient && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-teal-900/90 text-teal-100 border border-teal-600 text-xs font-bold shrink-0 animate-in fade-in shadow-xs">
@@ -1457,6 +1825,18 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Emergency Alert Audio Tone Settings Modal */}
+      <EmergencySoundSettingsModal
+        isOpen={isToneModalOpen}
+        onClose={() => setIsToneModalOpen(false)}
+        settings={toneSettings}
+        onSaveSettings={newSettings => {
+          setToneSettings(newSettings);
+          saveEmergencyToneSettings(newSettings);
+        }}
+        currentAlertSeverity={tickerAlerts[activeTickerIndex]?.level || 'critical'}
+      />
     </header>
   );
 };
