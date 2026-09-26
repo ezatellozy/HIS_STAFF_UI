@@ -293,7 +293,8 @@ export const HisProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const parsed: Patient[] = JSON.parse(saved);
       const existingIds = new Set(parsed.map(p => p.id));
-      const missing = MOCK_PATIENTS.filter(p => !existingIds.has(p.id));
+      const existingMrns = new Set(parsed.map(p => p.mrn.toLowerCase()));
+      const missing = MOCK_PATIENTS.filter(p => !existingIds.has(p.id) && !existingMrns.has(p.mrn.toLowerCase()));
       return missing.length > 0 ? [...parsed, ...missing] : parsed;
     } catch {
       return MOCK_PATIENTS;

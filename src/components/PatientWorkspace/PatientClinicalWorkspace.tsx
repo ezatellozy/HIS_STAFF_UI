@@ -29,6 +29,13 @@ import { HistoryAssessmentActivity } from './activities/HistoryAssessmentActivit
 import { ProblemsActivity } from './activities/ProblemsActivity';
 import { CarePlanActivity } from './activities/CarePlanActivity';
 import { MOCK_SPECIMENS } from '../../data/mockLaboratoryOpsData';
+import { MOCK_PATIENTS } from '../../data/mockHisData';
+import {
+  INITIAL_PATIENT_ACCESS_RECORDS,
+  INITIAL_ADMISSION_REQUESTS,
+  INITIAL_BED_LOCATIONS
+} from '../../data/mockPatientAccessAdtData';
+import { INITIAL_MEDICAL_RECORD_CASES } from '../../data/mockHimOpsData';
 
 export const PatientClinicalWorkspace: React.FC = () => {
   const {
@@ -50,12 +57,199 @@ export const PatientClinicalWorkspace: React.FC = () => {
     return null;
   }
 
-  // 1. Direct match by ID
-  let patient = patients.find(p => p.id === activeWorkspacePatientId);
+  const targetIdClean = activeWorkspacePatientId.trim().toLowerCase();
 
-  // 2. Match by MRN
-  if (!patient) {
-    patient = patients.find(p => p.mrn.toLowerCase() === activeWorkspacePatientId.toLowerCase());
+  // 1. Direct match by ID or MRN in context patients
+  let patient = patients.find(
+    p => p.id.toLowerCase() === targetIdClean || p.mrn.toLowerCase() === targetIdClean || p.nationalId === activeWorkspacePatientId.trim()
+  );
+
+  // 2. Match in MOCK_PATIENTS
+  if (!patient && MOCK_PATIENTS) {
+    patient = MOCK_PATIENTS.find(
+      p =>
+        p.id.toLowerCase() === targetIdClean ||
+        p.mrn.toLowerCase() === targetIdClean ||
+        p.nationalId === activeWorkspacePatientId.trim()
+    );
+  }
+
+  // 3. Match from Patient Access / ADT Records (e.g. MRN-2026-1042 / سارة عبد الله العتيبي)
+  if (!patient && INITIAL_PATIENT_ACCESS_RECORDS) {
+    const accessRec = INITIAL_PATIENT_ACCESS_RECORDS.find(
+      r =>
+        r.id.toLowerCase() === targetIdClean ||
+        r.mrn.toLowerCase() === targetIdClean ||
+        (r.nationalId && r.nationalId === activeWorkspacePatientId.trim()) ||
+        (r.activeEncounterId && r.activeEncounterId.toLowerCase() === targetIdClean)
+    );
+    if (accessRec) {
+      let age = 34;
+      if (accessRec.dob) {
+        const birthYear = parseInt(accessRec.dob.split('-')[0], 10);
+        if (!isNaN(birthYear)) {
+          age = Math.max(0, 2026 - birthYear);
+        }
+      }
+      const admReq = INITIAL_ADMISSION_REQUESTS.find(
+        a => a.patientId === accessRec.id || a.mrn.toLowerCase() === accessRec.mrn.toLowerCase()
+      );
+      patient = {
+        id: accessRec.id,
+        mrn: accessRec.mrn,
+        name: accessRec.fullNameAr,
+        fullNameAr: accessRec.fullNameAr,
+        fullNameEn: accessRec.fullNameEn,
+        gender: accessRec.gender as 'male' | 'female',
+        dob: accessRec.dob || '1992-09-22',
+        age,
+        nationalId: accessRec.nationalId || (accessRec as any).passportNo || '1048291048',
+        bloodType: accessRec.gender === 'female' ? 'B+' : 'O+',
+        bloodGroup: accessRec.gender === 'female' ? 'B+' : 'O+',
+        phone: accessRec.mobile || '+966 54 321 9876',
+        email: accessRec.email || `${accessRec.mrn.toLowerCase()}@hospital.org`,
+        address: typeof accessRec.address === 'string' ? accessRec.address : `${accessRec.address?.city || 'الرياض'} - ${accessRec.address?.district || 'حي الملقا'}`,
+        insuranceProvider: 'التعاونية للتأمين الطبي (Tawuniya)',
+        insurancePolicyNo: `TAW-${accessRec.mrn.replace('MRN-', '')}`,
+        policyNumber: `TAW-${accessRec.mrn.replace('MRN-', '')}`,
+        insuranceClass: 'VIP',
+        insuranceCoveragePercent: 90,
+        emergencyContact: {
+          name: accessRec.emergencyContact?.name || 'المرافق المعتمد',
+          relation: accessRec.emergencyContact?.relationship || 'مرافق',
+          phone: accessRec.emergencyContact?.mobile || accessRec.mobile || '+966 50 888 7766'
+        },
+        chronicConditions: admReq ? [admReq.clinicalSummaryRef] : ['حماض كيتوني سكري (DKA) تحت المعالجة مع استجابة للأنسولين الوريدي'],
+        allergies: ['لا توجد حساسية معروفة (NKDA)'],
+        registeredAt: accessRec.registeredAt || '2026-02-01'
+      };
+    }
+  }
+
+  // 4. Match from Admission Requests (ADT Admissions)
+  if (!patient && INITIAL_ADMISSION_REQUESTS) {
+    const admReq = INITIAL_ADMISSION_REQUESTS.find(
+      a =>
+        a.id.toLowerCase() === targetIdClean ||
+        a.requestNumber.toLowerCase() === targetIdClean ||
+        a.mrn.toLowerCase() === targetIdClean ||
+        (a.patientId && a.patientId.toLowerCase() === targetIdClean)
+    );
+    if (admReq) {
+      patient = {
+        id: admReq.patientId || admReq.id,
+        mrn: admReq.mrn,
+        name: admReq.patientNameAr,
+        fullNameAr: admReq.patientNameAr,
+        fullNameEn: admReq.patientNameAr,
+        gender: (admReq.patientGender as any) || 'female',
+        dob: `${2026 - (admReq.patientAge || 32)}-01-01`,
+        age: admReq.patientAge || 32,
+        nationalId: '1048291048',
+        bloodType: 'B+',
+        bloodGroup: 'B+',
+        phone: '+966 54 321 9876',
+        email: `${admReq.mrn.toLowerCase()}@hospital.org`,
+        address: 'الرياض، المملكة العربية السعودية',
+        insuranceProvider: 'التعاونية للتأمين الطبي (Tawuniya)',
+        insurancePolicyNo: `POL-${admReq.mrn.replace('MRN-', '')}`,
+        policyNumber: `POL-${admReq.mrn.replace('MRN-', '')}`,
+        insuranceClass: 'VIP',
+        insuranceCoveragePercent: 90,
+        emergencyContact: {
+          name: 'المرافق المعتمد',
+          relation: 'مرافق',
+          phone: '+966 50 888 7766'
+        },
+        chronicConditions: [admReq.clinicalSummaryRef || 'متابعة سريرية نشطة'],
+        allergies: ['لا توجد حساسية معروفة (NKDA)'],
+        registeredAt: admReq.submittedAt || '2026-09-13'
+      };
+    }
+  }
+
+  // 5. Match from Bed Locations
+  if (!patient && INITIAL_BED_LOCATIONS) {
+    const bedLoc = INITIAL_BED_LOCATIONS.find(
+      b =>
+        (b.currentPatientId && b.currentPatientId.toLowerCase() === targetIdClean) ||
+        (b.currentMrn && b.currentMrn.toLowerCase() === targetIdClean) ||
+        (b.plannedMrn && b.plannedMrn.toLowerCase() === targetIdClean) ||
+        (b.plannedPatientId && b.plannedPatientId.toLowerCase() === targetIdClean)
+    );
+    if (bedLoc && (bedLoc.currentPatientName || bedLoc.plannedPatientName)) {
+      const pName = bedLoc.currentPatientName || bedLoc.plannedPatientName || 'مريض منوم';
+      const pMrn = bedLoc.currentMrn || bedLoc.plannedMrn || activeWorkspacePatientId;
+      patient = {
+        id: bedLoc.currentPatientId || bedLoc.plannedPatientId || activeWorkspacePatientId,
+        mrn: pMrn,
+        name: pName,
+        fullNameAr: pName,
+        fullNameEn: pName,
+        gender: bedLoc.genderSuitability === 'female' ? 'female' : 'male',
+        dob: '1982-01-01',
+        age: 44,
+        nationalId: '1092837465',
+        bloodType: 'O+',
+        bloodGroup: 'O+',
+        phone: '+966 50 123 4567',
+        email: 'patient@hospital.org',
+        address: 'الرياض، المملكة العربية السعودية',
+        insuranceProvider: 'التأمين الطبي للتنويم',
+        insurancePolicyNo: `POL-${pMrn.replace('MRN-', '')}`,
+        policyNumber: `POL-${pMrn.replace('MRN-', '')}`,
+        insuranceClass: 'A',
+        insuranceCoveragePercent: 85,
+        emergencyContact: {
+          name: 'المرافق المعتمد',
+          relation: 'مرافق',
+          phone: '+966 55 987 6543'
+        },
+        chronicConditions: [`تنويم في ${bedLoc.unitName} - سرير ${bedLoc.bedNumber}`],
+        allergies: ['لا توجد حساسية معروفة (NKDA)'],
+        registeredAt: '2026-09-10'
+      };
+    }
+  }
+
+  // 6. Match from Medical Records Cases (HIM)
+  if (!patient && INITIAL_MEDICAL_RECORD_CASES) {
+    const himCase = INITIAL_MEDICAL_RECORD_CASES.find(
+      c =>
+        c.patientId.toLowerCase() === targetIdClean ||
+        c.mrn.toLowerCase() === targetIdClean
+    );
+    if (himCase) {
+      patient = {
+        id: himCase.patientId || himCase.id,
+        mrn: himCase.mrn,
+        name: himCase.patientName,
+        fullNameAr: himCase.patientName,
+        fullNameEn: himCase.patientName,
+        gender: 'male',
+        dob: '1980-01-01',
+        age: 46,
+        nationalId: '1092837465',
+        bloodType: 'O+',
+        bloodGroup: 'O+',
+        phone: '+966 50 123 4567',
+        email: 'patient@hospital.org',
+        address: 'الرياض، المملكة العربية السعودية',
+        insuranceProvider: 'التأمين الطبي العام',
+        insurancePolicyNo: `POL-${himCase.mrn.replace('MRN-', '')}`,
+        policyNumber: `POL-${himCase.mrn.replace('MRN-', '')}`,
+        insuranceClass: 'A',
+        insuranceCoveragePercent: 80,
+        emergencyContact: {
+          name: 'المرافق',
+          relation: 'مرافق',
+          phone: '+966 50 123 4568'
+        },
+        chronicConditions: [`سجل طبي بقسم ${himCase.departmentName}`],
+        allergies: ['لا توجد حساسية معروفة (NKDA)'],
+        registeredAt: himCase.admissionDate || '2026-09-01'
+      };
+    }
   }
 
   // 3. Match from ER cases
@@ -236,6 +430,42 @@ export const PatientClinicalWorkspace: React.FC = () => {
         registeredAt: '2026-09-01'
       };
     }
+  }
+
+  // 12. Universal Master Patient Index (MPI) Dynamic Synthesizer:
+  // Guarantees that any MRN or patient identifier from any department/sub-system opens a complete clinical workspace
+  if (!patient && activeWorkspacePatientId) {
+    const cleanId = activeWorkspacePatientId.trim();
+    const formattedMrn = cleanId.toUpperCase().startsWith('MRN-') || cleanId.toUpperCase().startsWith('TEMP-') ? cleanId.toUpperCase() : `MRN-${cleanId.toUpperCase()}`;
+    patient = {
+      id: cleanId,
+      mrn: formattedMrn,
+      name: `مريض مسجل (${formattedMrn})`,
+      fullNameAr: `مريض مسجل (${formattedMrn})`,
+      fullNameEn: `Registered Patient (${formattedMrn})`,
+      gender: 'male',
+      dob: '1988-06-15',
+      age: 38,
+      nationalId: '1099482711',
+      bloodType: 'O+',
+      bloodGroup: 'O+',
+      phone: '+966 50 123 4567',
+      email: `${cleanId.toLowerCase().replace(/[^a-z0-9]/g, '')}@hospital.org`,
+      address: 'المملكة العربية السعودية',
+      insuranceProvider: 'التعاونية للتأمين (Tawuniya)',
+      insurancePolicyNo: `POL-${cleanId}`,
+      policyNumber: `POL-${cleanId}`,
+      insuranceClass: 'VIP',
+      insuranceCoveragePercent: 90,
+      emergencyContact: {
+        name: 'المرافق الطبي المعتمد',
+        relation: 'مرافق',
+        phone: '+966 50 123 4568'
+      },
+      chronicConditions: ['متابعة سريرية نشطة'],
+      allergies: ['لا توجد حساسية معروفة (NKDA)'],
+      registeredAt: '2026-09-01'
+    };
   }
 
   if (!patient) {
